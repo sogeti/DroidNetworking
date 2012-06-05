@@ -1,0 +1,11 @@
+gen
+bin
+.classpath
+.metadata
+.project
+.DS_Store
+default.properties
+/.settings/
+/proguard/
+/*.properties
+build.xml
