@@ -24,6 +24,10 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 
 public class NetworkEngine {
+    private static final int HTTP_PORT = 80;
+    private static final int HTTPS_PORT = 443;
+    private static final int SOCKET_TIMEOUT = 5000;
+    private static final int CONNECTION_TIMEOUT = 5000;
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, HEAD
@@ -51,15 +55,16 @@ public class NetworkEngine {
         sharedNetworkQueue = Executors.newFixedThreadPool(2);
     }
 
-    public void init(Context context, String hostName) {
+    public void init(final Context context, final String hostName) {
         init(context, hostName, null, null);
     }
 
-    public void init(Context context, String hostName, Map<String, String> headers) {
+    public void init(final Context context, final String hostName, final Map<String, String> headers) {
         init(context, hostName, null, headers);
     }
 
-    public void init(Context context, String hostName, String apiPath, Map<String, String> headers) {
+    public void init(final Context context, final String hostName, final String apiPath,
+            final Map<String, String> headers) {
         this.hostName = hostName;
         this.context = context;
         this.apiPath = apiPath;
@@ -70,17 +75,17 @@ public class NetworkEngine {
 
             // Setup HTTP
             SchemeRegistry schemeRegistry = new SchemeRegistry();
-            schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+            schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), HTTP_PORT));
 
             // Setup HTTPS (accept all certificates)
             HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
             SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
             socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
-            schemeRegistry.register(new Scheme("https", socketFactory, 443));
+            schemeRegistry.register(new Scheme("https", socketFactory, HTTPS_PORT));
 
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 5000);
-            HttpConnectionParams.setSoTimeout(params, 5000);
+            HttpConnectionParams.setConnectionTimeout(params, SOCKET_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, CONNECTION_TIMEOUT);
 
             ThreadSafeClientConnManager connManager = new ThreadSafeClientConnManager(params, schemeRegistry);
 
@@ -108,28 +113,30 @@ public class NetworkEngine {
         }
     }
 
-    public NetworkOperation createOperationWithPath(String path) {
+    public NetworkOperation createOperationWithPath(final String path) {
         return createOperationWithPath(path, null, HttpMethod.GET, false);
     }
 
-    public NetworkOperation createOperationWithPath(String path, Map<String, String> params) {
+    public NetworkOperation createOperationWithPath(final String path, final Map<String, String> params) {
         return createOperationWithPath(path, params, HttpMethod.GET, false);
     }
 
-    public NetworkOperation createOperationWithPath(String path, Map<String, String> params, HttpMethod httpMethod) {
+    public NetworkOperation createOperationWithPath(final String path, final Map<String, String> params,
+            final HttpMethod httpMethod) {
         return createOperationWithPath(path, params, httpMethod, false);
     }
 
-    public NetworkOperation createOperationWithPath(String path, Map<String, String> params, HttpMethod httpMethod,
-            boolean ssl) {
+    public NetworkOperation createOperationWithPath(final String path, final Map<String, String> params,
+            final HttpMethod httpMethod, final boolean ssl) {
 
         StringBuffer url = new StringBuffer();
 
         url.append(ssl ? "https://" : "http://");
         url.append(hostName);
 
-        if (portNumber != 0)
+        if (portNumber != 0) {
             url.append(":" + portNumber);
+        }
 
         if (apiPath != null) {
             url.append(apiPath);
@@ -142,16 +149,16 @@ public class NetworkEngine {
         return createOperationWithURLString(url.toString(), params, httpMethod);
     }
 
-    public NetworkOperation createOperationWithURLString(String urlString) {
+    public NetworkOperation createOperationWithURLString(final String urlString) {
         return createOperationWithURLString(urlString, null, HttpMethod.GET);
     }
 
-    public NetworkOperation createOperationWithURLString(String urlString, Map<String, String> params) {
+    public NetworkOperation createOperationWithURLString(final String urlString, final Map<String, String> params) {
         return createOperationWithURLString(urlString, params, HttpMethod.GET);
     }
 
-    public NetworkOperation createOperationWithURLString(String urlString, Map<String, String> params,
-            HttpMethod httpMethod) {
+    public NetworkOperation createOperationWithURLString(final String urlString, final Map<String, String> params,
+            final HttpMethod httpMethod) {
         NetworkOperation operation = new NetworkOperation(urlString, params, httpMethod);
 
         prepareHeaders(operation);
@@ -159,31 +166,31 @@ public class NetworkEngine {
         return operation;
     }
 
-    public void prepareHeaders(NetworkOperation operation) {
+    public void prepareHeaders(final NetworkOperation operation) {
         operation.addHeaders(headers);
     }
 
-    public void enqueueOperation(NetworkOperation operation) {
+    public void enqueueOperation(final NetworkOperation operation) {
         enqueueOperation(operation, false);
     }
 
-    public void enqueueOperation(NetworkOperation operation, boolean forceReload) {
+    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {
         sharedNetworkQueue.submit(operation);
     }
 
-    public void executeOperation(NetworkOperation operation) {
+    public void executeOperation(final NetworkOperation operation) {
         executeOperation(operation, false);
     }
-    
-    public void executeOperation(NetworkOperation operation, boolean forceReload) {
+
+    public void executeOperation(final NetworkOperation operation, final boolean forceReload) {
         operation.execute();
     }
-    
+
     public DefaultHttpClient getHttpClient() {
         return httpClient;
     }
 
-    public void setPortNumber(int portNumber) {
+    public void setPortNumber(final int portNumber) {
         this.portNumber = portNumber;
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="se.netdev.ndnetworking.test"
+    package="com.sogeti.droidnetworking.test"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -9,7 +9,7 @@
     
     <instrumentation
         android:name="android.test.InstrumentationTestRunner"
-        android:targetPackage="com.sogeti.droidnetworking.test" />
+        android:targetPackage="com.sogeti.droidnetworking" />
 
     <application
         android:icon="@drawable/ic_launcher"

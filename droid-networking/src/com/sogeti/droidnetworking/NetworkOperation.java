@@ -52,23 +52,23 @@ public class NetworkOperation implements Runnable {
     protected String responseString;
     protected int httpStatusCode;
     protected boolean useGzip = true;
-    
-    public static interface ResponseParser {
-        public void parse(final InputStream is) throws IOException;
+
+    public interface ResponseParser {
+        void parse(final InputStream is) throws IOException;
     }
 
-    public static interface OperationListener {
-        public void onCompletion(NetworkOperation operation);
+    public interface OperationListener {
+        void onCompletion(final NetworkOperation operation);
 
-        public void onError();
+        void onError();
     }
 
-    public NetworkOperation(String urlString, Map<String, String> params, HttpMethod httpMethod) {
+    public NetworkOperation(final String urlString, final Map<String, String> params, final HttpMethod httpMethod) {
         this.urlString = urlString;
         this.httpMethod = httpMethod;
         this.params = new HashMap<String, String>();
         this.headers = new HashMap<String, String>();
-        
+
         if (useGzip) {
             this.headers.put("Accept-Encoding", "gzip");
         }
@@ -77,7 +77,7 @@ public class NetworkOperation implements Runnable {
             this.params.putAll(params);
         }
     }
-    
+
     public void execute() {
         switch (httpMethod) {
             case GET:
@@ -94,6 +94,8 @@ public class NetworkOperation implements Runnable {
                 break;
             case HEAD:
                 request = new HttpHead(urlString);
+                break;
+            default:
                 break;
         }
 
@@ -114,30 +116,30 @@ public class NetworkOperation implements Runnable {
 
             }
         }
-        
+
         for (String header : headers.keySet()) {
             request.addHeader(header, headers.get(header));
         }
 
         try {
             response = NetworkEngine.getInstance().getHttpClient().execute(request);
-            
+
             HttpEntity entity = getDecompressingEntity(response.getEntity());
-            
+
             cacheResponse(response);
-            
+
             httpStatusCode = response.getStatusLine().getStatusCode();
-            
+
             InputStream is = entity.getContent();
-            
+
             if (parser != null) {
                 parser.parse(is);
             } else {
                 responseString = convertStreamToString(is);
             }
-            
+
             is.close();
-            
+
             if (entity != null) {
                 entity.consumeContent();
             }
@@ -161,7 +163,7 @@ public class NetworkOperation implements Runnable {
 
     private Handler handler = new Handler() {
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(final Message msg) {
             int status = msg.arg1;
 
             if (status == STATUS_COMPLETED) {
@@ -172,14 +174,14 @@ public class NetworkOperation implements Runnable {
         }
     };
 
-    public void setListener(OperationListener listener) {
+    public void setListener(final OperationListener listener) {
         this.listener = listener;
     }
 
     public int getHttpStatusCode() {
         return httpStatusCode;
     }
-    
+
     public String getResponseString() {
         return responseString;
     }
@@ -188,11 +190,11 @@ public class NetworkOperation implements Runnable {
         return request;
     }
 
-    public void addParams(Map<String, String> params) {
+    public void addParams(final Map<String, String> params) {
         params.putAll(params);
     }
 
-    public void addHeaders(Map<String, String> headers) {
+    public void addHeaders(final Map<String, String> headers) {
         this.headers.putAll(headers);
     }
 
@@ -200,44 +202,44 @@ public class NetworkOperation implements Runnable {
         return parser;
     }
 
-    public void setParser(ResponseParser parser) {
+    public void setParser(final ResponseParser parser) {
         this.parser = parser;
     }
-    
-    public void setUseGzip(boolean useGzip) {
+
+    public void setUseGzip(final boolean useGzip) {
         this.useGzip = useGzip;
     }
-    
-    private String convertStreamToString(InputStream is) throws IOException{
+
+    private String convertStreamToString(final InputStream is) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        
+
         StringBuilder sb = new StringBuilder();
- 
+
         String line = null;
-       
+
         while ((line = reader.readLine()) != null) {
             sb.append(line);
         }
-       
+
         return sb.toString();
     }
-    
-    private HttpEntity getDecompressingEntity(HttpEntity entity) {
+
+    private HttpEntity getDecompressingEntity(final HttpEntity entity) {
         Header header = entity.getContentEncoding();
-        
+
         if (header != null) {
             HeaderElement[] codecs = header.getElements();
-            
+
             for (int i = 0; i < codecs.length; i++) {
                 if (codecs[i].getName().equalsIgnoreCase("gzip")) {
                     return new GzipDecompressingEntity(entity);
                 }
             }
         }
-        
+
         return entity;
     }
-    
+
     private class GzipDecompressingEntity extends HttpEntityWrapper {
         public GzipDecompressingEntity(final HttpEntity entity) {
             super(entity);
@@ -246,7 +248,7 @@ public class NetworkOperation implements Runnable {
         @Override
         public InputStream getContent() throws IOException, IllegalStateException {
             InputStream is = wrappedEntity.getContent();
-            
+
             return new GZIPInputStream(is);
         }
 
@@ -255,57 +257,58 @@ public class NetworkOperation implements Runnable {
             return -1;
         }
     }
-    
-    private void cacheResponse(HttpResponse response) {
+
+    private void cacheResponse(final HttpResponse response) {
         Header lastModified = response.getFirstHeader("Last-Modified");
         Header eTag = response.getFirstHeader("Etag");
         Header expiresOn = response.getFirstHeader("Expires");
         Header contentType = response.getFirstHeader("Content-Type");
         Header cacheControl = response.getFirstHeader("Cache-Control");
-        
+
         Date expiresOnDate = null;
-        
+
         if (cacheControl != null) {
             String[] cacheControlEntities = cacheControl.getValue().split(",");
-            
+
             for (int i = 0; i < cacheControlEntities.length; i++) {
                 if (cacheControlEntities[i].contains("max-age")) {
                     String maxAge = null;
                     String[] array = cacheControlEntities[i].split("=");
-                    
+
                     if (array.length > 1) {
                         maxAge = array[1];
                     }
-                    
+
                     expiresOnDate = new Date();
-                    
+
                     long time = expiresOnDate.getTime();
                     time = time + Integer.valueOf(maxAge) * 1000;
                     expiresOnDate.setTime(time);
                 }
-                
+
                 if (cacheControlEntities[i].contains("no-cache")) {
-                    
+
                 }
             }
-            
+
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyyy HH:mm:ss z");
             String expiresOnStr = simpleDateFormat.format(expiresOnDate);
+            Log.d("TAG", "Exipres on: " + expiresOnStr);
         }
-        
-        
+
+
         if (lastModified != null) {
             Log.d("TAG", "Last-Modified: " + lastModified.getValue());
         }
-        
+
         if (eTag != null) {
             Log.d("TAG", "ETag: " + eTag.getValue());
         }
-        
+
         if (expiresOn != null) {
             Log.d("TAG", "Expires: " + expiresOn.getValue());
         }
-        
+
         if (contentType != null) {
             Log.d("TAG", "Content-Type: " + contentType.getValue());
         }
