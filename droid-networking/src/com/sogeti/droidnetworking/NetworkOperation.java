@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -160,19 +161,30 @@ public class NetworkOperation implements Runnable {
             handler.sendEmptyMessage(STATUS_COMPLETED);
         }
     }
+    
+    static class NetworkOperationHandler extends Handler {
+        WeakReference<NetworkOperation> ref;
 
-    private Handler handler = new Handler() {
+        NetworkOperationHandler(NetworkOperation networkOperation) {
+            this.ref = new WeakReference<NetworkOperation>(networkOperation);
+        }
+
         @Override
-        public void handleMessage(final Message msg) {
-            int status = msg.arg1;
-
-            if (status == STATUS_COMPLETED) {
-                listener.onCompletion(NetworkOperation.this);
+        public void handleMessage(Message message) {
+        	NetworkOperation networkOperation = ref.get();
+            
+        	int status = message.arg1;
+    		
+        	if (status == STATUS_COMPLETED) {
+                networkOperation.listener.onCompletion(networkOperation);
             } else if (status == STATUS_ERROR) {
-                listener.onError();
+            	networkOperation.listener.onError();
             }
         }
-    };
+    }
+	
+    private NetworkOperationHandler handler = new NetworkOperationHandler(this);
+   
 
     public void setListener(final OperationListener listener) {
         this.listener = listener;

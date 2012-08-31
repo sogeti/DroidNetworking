@@ -21,9 +21,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
     
     @Override
     public void setUp() {
-        NetworkEngine.getInstance().init(getInstrumentation().getContext(),
-                "freezing-winter-7173.heroku.com");
-        NetworkEngine.getInstance().setPortNumber(80);
+        NetworkEngine.getInstance().init(getInstrumentation().getContext());
     }
     
     @Override
@@ -92,7 +90,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
     
     private ArrayList<Message> getMessages() {
         NetworkOperation operation = NetworkEngine.getInstance()
-            .createOperationWithPath("/messages.json");
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
         
         NetworkEngine.getInstance().executeOperation(operation);
         
@@ -120,7 +118,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
     
     private Message getMessage(int id) {
         NetworkOperation operation = NetworkEngine.getInstance()
-            .createOperationWithPath("/messages/"+id+".json");
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json");
         
         NetworkEngine.getInstance().executeOperation(operation);
         
@@ -144,8 +142,8 @@ public class BasicHttpTests extends InstrumentationTestCase {
         params.put("message[title]", title);
         params.put("message[body]", body);
         
-        NetworkOperation operation = NetworkEngine.getInstance().createOperationWithPath("/messages.json",
-                params, HttpMethod.POST);
+        NetworkOperation operation = NetworkEngine.getInstance().
+        		createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json", params, HttpMethod.POST);
         
         NetworkEngine.getInstance().executeOperation(operation);
         
@@ -170,7 +168,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
         params.put("message[body]", body);
         
         NetworkOperation operation = NetworkEngine.getInstance()
-            .createOperationWithPath("/messages/"+id+".json", params, HttpMethod.PUT);
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json", params, HttpMethod.PUT);
         
         NetworkEngine.getInstance().executeOperation(operation);
         
@@ -183,7 +181,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
     
     private boolean deleteMessage(int id) {
         NetworkOperation operation = NetworkEngine.getInstance()
-            .createOperationWithPath("/messages/"+id+".json", null, HttpMethod.DELETE);
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json", null, HttpMethod.DELETE);
         
         NetworkEngine.getInstance().executeOperation(operation);
         
