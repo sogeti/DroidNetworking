@@ -34,13 +34,15 @@ import com.sogeti.droidnetworking.NetworkEngine.HttpMethod;
 
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 public class NetworkOperation implements Runnable {
-
     private static final int STATUS_COMPLETED = 0;
     private static final int STATUS_ERROR = 1;
     private static final int STATUS_CANCELLED = 2;
+    
+    private static final String LAST_MODIFIED = "Last-Modified";
+    private static final String ETAG = "ETag";
+    private static final String EXPIRES = "Exipres";
 
     protected String urlString;
     protected Map<String, String> headers;
@@ -53,6 +55,7 @@ public class NetworkOperation implements Runnable {
     protected String responseString;
     protected int httpStatusCode;
     protected boolean useGzip = true;
+    protected Map<String, String> cacheHeaders;
 
     public interface ResponseParser {
         void parse(final InputStream is) throws IOException;
@@ -69,6 +72,7 @@ public class NetworkOperation implements Runnable {
         this.httpMethod = httpMethod;
         this.params = new HashMap<String, String>();
         this.headers = new HashMap<String, String>();
+        this.cacheHeaders = new HashMap<String, String>();
 
         if (useGzip) {
             this.headers.put("Accept-Encoding", "gzip");
@@ -127,7 +131,7 @@ public class NetworkOperation implements Runnable {
 
             HttpEntity entity = getDecompressingEntity(response.getEntity());
 
-            cacheResponse(response);
+            setCacheHeaders(response);
 
             httpStatusCode = response.getStatusLine().getStatusCode();
 
@@ -270,59 +274,81 @@ public class NetworkOperation implements Runnable {
         }
     }
 
-    private void cacheResponse(final HttpResponse response) {
-        Header lastModified = response.getFirstHeader("Last-Modified");
-        Header eTag = response.getFirstHeader("Etag");
-        Header expiresOn = response.getFirstHeader("Expires");
-        Header contentType = response.getFirstHeader("Content-Type");
+    private void setCacheHeaders(final HttpResponse response) {
+    	String lastModified = null;
+    	String eTag = null;
+    	String expiresOn = null;
+    	
+    	if (response.getFirstHeader(LAST_MODIFIED) != null) {
+    		lastModified = response.getFirstHeader(LAST_MODIFIED).getValue();
+    	}
+    	
+    	if (response.getFirstHeader(ETAG) != null) {
+    		eTag = response.getFirstHeader(ETAG).getValue();
+    	}
+    	
+    	if (response.getFirstHeader(EXPIRES) != null) {
+    		expiresOn = response.getFirstHeader(EXPIRES).getValue();
+    	}
+    	
         Header cacheControl = response.getFirstHeader("Cache-Control");
-
-        Date expiresOnDate = null;
-
+        
         if (cacheControl != null) {
             String[] cacheControlEntities = cacheControl.getValue().split(",");
+            
+            Date expiresOnDate = null;
 
-            for (int i = 0; i < cacheControlEntities.length; i++) {
-                if (cacheControlEntities[i].contains("max-age")) {
+            for (String subString : cacheControlEntities) {
+                if (subString.contains("max-age")) {
                     String maxAge = null;
-                    String[] array = cacheControlEntities[i].split("=");
+                    String[] array = subString.split("=");
 
                     if (array.length > 1) {
                         maxAge = array[1];
                     }
 
                     expiresOnDate = new Date();
-
-                    long time = expiresOnDate.getTime();
-                    time = time + Integer.valueOf(maxAge) * 1000;
-                    expiresOnDate.setTime(time);
+                    expiresOnDate.setTime(Integer.valueOf(maxAge) * 1000);
                 }
 
-                if (cacheControlEntities[i].contains("no-cache")) {
-
+                if (subString.contains("no-cache")) {
+                	expiresOnDate = new Date();
                 }
             }
 
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyyy HH:mm:ss z");
-            String expiresOnStr = simpleDateFormat.format(expiresOnDate);
-            Log.d("TAG", "Exipres on: " + expiresOnStr);
+            expiresOn = simpleDateFormat.format(expiresOnDate);
         }
 
 
         if (lastModified != null) {
-            Log.d("TAG", "Last-Modified: " + lastModified.getValue());
+        	cacheHeaders.put(LAST_MODIFIED, lastModified);
         }
 
         if (eTag != null) {
-            Log.d("TAG", "ETag: " + eTag.getValue());
+        	cacheHeaders.put(ETAG, eTag);
         }
 
         if (expiresOn != null) {
-            Log.d("TAG", "Expires: " + expiresOn.getValue());
-        }
-
-        if (contentType != null) {
-            Log.d("TAG", "Content-Type: " + contentType.getValue());
+        	cacheHeaders.put(EXPIRES, expiresOn);
         }
     }
+    
+    public void updateOperation(Map<String, String> cacheHeaders) {
+    	String lastModified = cacheHeaders.get(LAST_MODIFIED);
+    	String eTag = cacheHeaders.get(ETAG);
+    	
+    	if (lastModified != null) {
+    		headers.put("IF-MODIFIED-SINCE", lastModified);
+    	}
+    	
+    	if (eTag != null) {
+    		headers.put("IF-NONE-MATCH", eTag);
+    	}
+    }
+    
+    public boolean isCachable() {
+    	return httpMethod == HttpMethod.GET;
+    }
 }
+
