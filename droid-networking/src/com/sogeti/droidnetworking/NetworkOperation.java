@@ -42,7 +42,7 @@ public class NetworkOperation implements Runnable {
     
     private static final String LAST_MODIFIED = "Last-Modified";
     private static final String ETAG = "ETag";
-    private static final String EXPIRES = "Exipres";
+    private static final String EXPIRES = "Expires";
 
     protected String urlString;
     protected Map<String, String> headers;
@@ -225,8 +225,16 @@ public class NetworkOperation implements Runnable {
     public void setUseGzip(final boolean useGzip) {
         this.useGzip = useGzip;
     }
+    
+    public Map<String, String> getCacheHeaders() {
+		return cacheHeaders;
+	}
 
-    private String convertStreamToString(final InputStream is) throws IOException {
+	public void setCacheHeaders(Map<String, String> cacheHeaders) {
+		this.cacheHeaders = cacheHeaders;
+	}
+
+	private String convertStreamToString(final InputStream is) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
         StringBuilder sb = new StringBuilder();
