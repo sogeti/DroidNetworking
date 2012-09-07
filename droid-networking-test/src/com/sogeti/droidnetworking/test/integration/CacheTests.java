@@ -56,6 +56,8 @@ public class CacheTests extends InstrumentationTestCase {
 			assertTrue(false);
 		}
         
+        
+        // ETag is a MD5 sum of the content. If the content changes this ETag will not be valid.
         assertFalse(cacheHeaders.get("ETag") == null);
         assertTrue(cacheHeaders.get("ETag").equalsIgnoreCase("\"d751713988987e9331980363e24189ce\""));
         
