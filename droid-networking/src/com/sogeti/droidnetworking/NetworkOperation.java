@@ -39,10 +39,12 @@ public class NetworkOperation implements Runnable {
     private static final int STATUS_COMPLETED = 0;
     private static final int STATUS_ERROR = 1;
     private static final int STATUS_CANCELLED = 2;
-    
+
     private static final String LAST_MODIFIED = "Last-Modified";
     private static final String ETAG = "ETag";
     private static final String EXPIRES = "Expires";
+
+    private static final int ONE_SECOND_IN_MS = 1000;
 
     protected String urlString;
     protected Map<String, String> headers;
@@ -129,24 +131,26 @@ public class NetworkOperation implements Runnable {
         try {
             response = NetworkEngine.getInstance().getHttpClient().execute(request);
 
-            HttpEntity entity = getDecompressingEntity(response.getEntity());
-
             setCacheHeaders(response);
 
             httpStatusCode = response.getStatusLine().getStatusCode();
 
-            InputStream is = entity.getContent();
+            if (response.getEntity() != null) {
+            	HttpEntity entity = getDecompressingEntity(response.getEntity());
 
-            if (parser != null) {
-                parser.parse(is);
-            } else {
-                responseString = convertStreamToString(is);
-            }
+	            InputStream is = entity.getContent();
 
-            is.close();
+	            if (parser != null) {
+	                parser.parse(is);
+	            } else {
+	                responseString = convertStreamToString(is);
+	            }
 
-            if (entity != null) {
-                entity.consumeContent();
+	            is.close();
+
+	            if (entity != null) {
+	                entity.consumeContent();
+	            }
             }
         } catch (ClientProtocolException e) {
 
@@ -165,20 +169,20 @@ public class NetworkOperation implements Runnable {
             handler.sendEmptyMessage(STATUS_COMPLETED);
         }
     }
-    
-    static class NetworkOperationHandler extends Handler {
-        WeakReference<NetworkOperation> ref;
 
-        NetworkOperationHandler(NetworkOperation networkOperation) {
+    static class NetworkOperationHandler extends Handler {
+        private WeakReference<NetworkOperation> ref;
+
+        NetworkOperationHandler(final NetworkOperation networkOperation) {
             this.ref = new WeakReference<NetworkOperation>(networkOperation);
         }
 
         @Override
-        public void handleMessage(Message message) {
+        public void handleMessage(final Message message) {
         	NetworkOperation networkOperation = ref.get();
-            
+
         	int status = message.arg1;
-    		
+
         	if (status == STATUS_COMPLETED) {
                 networkOperation.listener.onCompletion(networkOperation);
             } else if (status == STATUS_ERROR) {
@@ -186,9 +190,9 @@ public class NetworkOperation implements Runnable {
             }
         }
     }
-	
+
     private NetworkOperationHandler handler = new NetworkOperationHandler(this);
-   
+
 
     public void setListener(final OperationListener listener) {
         this.listener = listener;
@@ -225,7 +229,7 @@ public class NetworkOperation implements Runnable {
     public void setUseGzip(final boolean useGzip) {
         this.useGzip = useGzip;
     }
-    
+
     public Map<String, String> getCacheHeaders() {
 		return cacheHeaders;
 	}
@@ -270,7 +274,7 @@ public class NetworkOperation implements Runnable {
         }
 
         @Override
-        public InputStream getContent() throws IOException, IllegalStateException {
+        public InputStream getContent() throws IOException {
             InputStream is = wrappedEntity.getContent();
 
             return new GZIPInputStream(is);
@@ -286,24 +290,24 @@ public class NetworkOperation implements Runnable {
     	String lastModified = null;
     	String eTag = null;
     	String expiresOn = null;
-    	
+
     	if (response.getFirstHeader(LAST_MODIFIED) != null) {
     		lastModified = response.getFirstHeader(LAST_MODIFIED).getValue();
     	}
-    	
+
     	if (response.getFirstHeader(ETAG) != null) {
     		eTag = response.getFirstHeader(ETAG).getValue();
     	}
-    	
+
     	if (response.getFirstHeader(EXPIRES) != null) {
     		expiresOn = response.getFirstHeader(EXPIRES).getValue();
     	}
-    	
+
         Header cacheControl = response.getFirstHeader("Cache-Control");
-        
+
         if (cacheControl != null) {
             String[] cacheControlEntities = cacheControl.getValue().split(",");
-            
+
             Date expiresOnDate = null;
 
             for (String subString : cacheControlEntities) {
@@ -316,7 +320,7 @@ public class NetworkOperation implements Runnable {
                     }
 
                     expiresOnDate = new Date();
-                    expiresOnDate.setTime(Integer.valueOf(maxAge) * 1000);
+                    expiresOnDate.setTime(Integer.valueOf(maxAge) * ONE_SECOND_IN_MS);
                 }
 
                 if (subString.contains("no-cache")) {
@@ -341,20 +345,20 @@ public class NetworkOperation implements Runnable {
         	cacheHeaders.put(EXPIRES, expiresOn);
         }
     }
-    
+
     public void updateOperation(Map<String, String> cacheHeaders) {
     	String lastModified = cacheHeaders.get(LAST_MODIFIED);
     	String eTag = cacheHeaders.get(ETAG);
-    	
+
     	if (lastModified != null) {
     		headers.put("IF-MODIFIED-SINCE", lastModified);
     	}
-    	
+
     	if (eTag != null) {
     		headers.put("IF-NONE-MATCH", eTag);
     	}
     }
-    
+
     public boolean isCachable() {
     	return httpMethod == HttpMethod.GET;
     }

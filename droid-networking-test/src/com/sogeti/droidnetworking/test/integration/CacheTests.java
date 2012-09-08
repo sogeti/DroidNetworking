@@ -36,7 +36,7 @@ public class CacheTests extends InstrumentationTestCase {
         
     }
     
-    public void testHeaders() {
+    public void testHeadersTC1() {
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -62,6 +62,31 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(cacheHeaders.get("ETag").equalsIgnoreCase("\"d751713988987e9331980363e24189ce\""));
         
         assertTrue(cacheHeaders.get("Last-Modified") == null);
+    }
+    
+    public void testNotModifiedTC1() {
+    	NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+            
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getHttpStatusCode() == 200);
+        
+        // Save the cache headers from the first request
+        Map<String, String> cacheHeaders = operation.getCacheHeaders();
+        
+        // Create a new request
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+        
+        // Update the headers with the saved cache headers (ETag)
+        operation.updateOperation(cacheHeaders);
+        
+        // Execute the operation
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // The server should respond with 304 Not Modified since we supplied a ETag
+        assertTrue(operation.getHttpStatusCode() == 304);
     }
     
     private ArrayList<Message> getMessages() {
