@@ -30,7 +30,7 @@ Execute the operation synchronously:
 
 Get the status code from the operation:
 
-``operation.getHttpStatusCode()`
+``operation.getHttpStatusCode();``
 
 Get the response string from the operation:
 
@@ -38,7 +38,7 @@ Get the response string from the operation:
 
 More examples
 --------
-Check the test cases for more examples how to use the DroidNetworking library.
+Check out the test cases for more examples how to use the DroidNetworking library.
 
 License
 --------
