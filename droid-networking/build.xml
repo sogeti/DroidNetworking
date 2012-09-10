@@ -94,8 +94,8 @@
 
 	    <checkstyle config="sun_checks.xml" failOnViolation="false">
 	      <fileset dir="src">
-	          <include name="**/*.java"/>
-	      	  <exclude name="com/sogeti/droidnetworking/utilities/Base64/*.java"/>
+	          <exclude name="com/sogeti/droidnetworking/utilities/Base64.java"/>
+	          <include name="**/*.java"/>  	  
 	      </fileset>
 	      <formatter type="xml" toFile="checkstyle_errors.xml"/>
 	    </checkstyle>
