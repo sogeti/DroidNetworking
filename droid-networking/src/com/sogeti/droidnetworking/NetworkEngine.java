@@ -75,7 +75,7 @@ public class NetworkEngine {
         ThreadSafeClientConnManager connManager = new ThreadSafeClientConnManager(params, schemeRegistry);
 
         httpClient = new DefaultHttpClient(connManager, params);
-    
+
         if (headers == null) {
             this.headers = new HashMap<String, String>();
         } else {
