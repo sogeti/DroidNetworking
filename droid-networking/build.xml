@@ -93,7 +93,10 @@
 	    <taskdef resource="checkstyletask.properties" classpath="${checkstyle.home}/checkstyle-5.5-all.jar"/> 
 
 	    <checkstyle config="sun_checks.xml" failOnViolation="false">
-	      <fileset dir="src" includes="**/*.java"/>
+	      <fileset dir="src">
+	          <include name="**/*.java"/>
+	      	  <exclude name="com/sogeti/droidnetworking/Base64/*.java"/>
+	      </fileset>
 	      <formatter type="xml" toFile="checkstyle_errors.xml"/>
 	    </checkstyle>
 

@@ -89,6 +89,15 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 304);
     }
     
+    public void testUniqueIdentifierTC1() {
+    	NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+            
+        assertFalse(operation == null);
+        
+        assertTrue(operation.getUniqueIdentifier().equalsIgnoreCase("674e29d6bdfd30ea62e56ae0d1bdea88"));
+    }
+    
     private ArrayList<Message> getMessages() {
         NetworkOperation operation = NetworkEngine.getInstance()
             .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");

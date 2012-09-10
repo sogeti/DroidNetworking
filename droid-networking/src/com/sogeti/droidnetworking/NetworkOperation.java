@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +30,8 @@ import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.sogeti.droidnetworking.NetworkEngine.HttpMethod;
+import com.sogeti.droidnetworking.utilities.Base64;
+import com.sogeti.droidnetworking.utilities.MD5;
 
 import android.os.Handler;
 import android.os.Message;
@@ -46,18 +47,20 @@ public class NetworkOperation implements Runnable {
 
     private static final int ONE_SECOND_IN_MS = 1000;
 
-    protected String urlString;
-    protected Map<String, String> headers;
-    protected Map<String, String> params;
-    protected HttpMethod httpMethod;
-    protected HttpResponse response;
-    protected HttpUriRequest request;
-    protected ResponseParser parser;
-    protected OperationListener listener;
-    protected String responseString;
-    protected int httpStatusCode;
-    protected boolean useGzip = true;
-    protected Map<String, String> cacheHeaders;
+    private String urlString;
+    private Map<String, String> headers;
+    private Map<String, String> params;
+    private HttpMethod httpMethod;
+    private HttpResponse response;
+    private HttpUriRequest request;
+    private ResponseParser parser;
+    private OperationListener listener;
+    private String responseString;
+    private int httpStatusCode;
+    private boolean useGzip = true;
+    private Map<String, String> cacheHeaders;
+    private String username;
+    private String password;
 
     public interface ResponseParser {
         void parse(final InputStream is) throws IOException;
@@ -87,22 +90,22 @@ public class NetworkOperation implements Runnable {
 
     public void execute() {
         switch (httpMethod) {
-            case GET:
+            case GET :
                 request = new HttpGet(urlString);
                 break;
-            case POST:
+            case POST :
                 request = new HttpPost(urlString);
                 break;
-            case PUT:
+            case PUT :
                 request = new HttpPut(urlString);
                 break;
-            case DELETE:
+            case DELETE :
                 request = new HttpDelete(urlString);
                 break;
-            case HEAD:
+            case HEAD :
                 request = new HttpHead(urlString);
                 break;
-            default:
+            default :
                 break;
         }
 
@@ -136,26 +139,26 @@ public class NetworkOperation implements Runnable {
             httpStatusCode = response.getStatusLine().getStatusCode();
 
             if (response.getEntity() != null) {
-            	HttpEntity entity = getDecompressingEntity(response.getEntity());
+                HttpEntity entity = getDecompressingEntity(response.getEntity());
 
-	            InputStream is = entity.getContent();
+                InputStream is = entity.getContent();
 
-	            if (parser != null) {
-	                parser.parse(is);
-	            } else {
-	                responseString = convertStreamToString(is);
-	            }
+                if (parser != null) {
+                    parser.parse(is);
+                } else {
+                    responseString = convertStreamToString(is);
+                }
 
-	            is.close();
+                is.close();
 
-	            if (entity != null) {
-	                entity.consumeContent();
-	            }
+                if (entity != null) {
+                    entity.consumeContent();
+                }
             }
         } catch (ClientProtocolException e) {
-
+            e.printStackTrace();
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -171,28 +174,25 @@ public class NetworkOperation implements Runnable {
     }
 
     static class NetworkOperationHandler extends Handler {
-        private WeakReference<NetworkOperation> ref;
+        private NetworkOperation networkOperation;
 
         NetworkOperationHandler(final NetworkOperation networkOperation) {
-            this.ref = new WeakReference<NetworkOperation>(networkOperation);
+            this.networkOperation = networkOperation;
         }
 
         @Override
         public void handleMessage(final Message message) {
-        	NetworkOperation networkOperation = ref.get();
+            int status = message.arg1;
 
-        	int status = message.arg1;
-
-        	if (status == STATUS_COMPLETED) {
+            if (status == STATUS_COMPLETED) {
                 networkOperation.listener.onCompletion(networkOperation);
             } else if (status == STATUS_ERROR) {
-            	networkOperation.listener.onError();
+                networkOperation.listener.onError();
             }
         }
     }
 
     private NetworkOperationHandler handler = new NetworkOperationHandler(this);
-
 
     public void setListener(final OperationListener listener) {
         this.listener = listener;
@@ -231,14 +231,14 @@ public class NetworkOperation implements Runnable {
     }
 
     public Map<String, String> getCacheHeaders() {
-		return cacheHeaders;
-	}
+        return cacheHeaders;
+    }
 
-	public void setCacheHeaders(Map<String, String> cacheHeaders) {
-		this.cacheHeaders = cacheHeaders;
-	}
+    public void setCacheHeaders(final Map<String, String> cacheHeaders) {
+        this.cacheHeaders = cacheHeaders;
+    }
 
-	private String convertStreamToString(final InputStream is) throws IOException {
+    private String convertStreamToString(final InputStream is) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
         StringBuilder sb = new StringBuilder();
@@ -287,21 +287,21 @@ public class NetworkOperation implements Runnable {
     }
 
     private void setCacheHeaders(final HttpResponse response) {
-    	String lastModified = null;
-    	String eTag = null;
-    	String expiresOn = null;
+        String lastModified = null;
+        String eTag = null;
+        String expiresOn = null;
 
-    	if (response.getFirstHeader(LAST_MODIFIED) != null) {
-    		lastModified = response.getFirstHeader(LAST_MODIFIED).getValue();
-    	}
+        if (response.getFirstHeader(LAST_MODIFIED) != null) {
+            lastModified = response.getFirstHeader(LAST_MODIFIED).getValue();
+        }
 
-    	if (response.getFirstHeader(ETAG) != null) {
-    		eTag = response.getFirstHeader(ETAG).getValue();
-    	}
+        if (response.getFirstHeader(ETAG) != null) {
+            eTag = response.getFirstHeader(ETAG).getValue();
+        }
 
-    	if (response.getFirstHeader(EXPIRES) != null) {
-    		expiresOn = response.getFirstHeader(EXPIRES).getValue();
-    	}
+        if (response.getFirstHeader(EXPIRES) != null) {
+            expiresOn = response.getFirstHeader(EXPIRES).getValue();
+        }
 
         Header cacheControl = response.getFirstHeader("Cache-Control");
 
@@ -324,7 +324,7 @@ public class NetworkOperation implements Runnable {
                 }
 
                 if (subString.contains("no-cache")) {
-                	expiresOnDate = new Date();
+                    expiresOnDate = new Date();
                 }
             }
 
@@ -332,35 +332,57 @@ public class NetworkOperation implements Runnable {
             expiresOn = simpleDateFormat.format(expiresOnDate);
         }
 
-
         if (lastModified != null) {
-        	cacheHeaders.put(LAST_MODIFIED, lastModified);
+            cacheHeaders.put(LAST_MODIFIED, lastModified);
         }
 
         if (eTag != null) {
-        	cacheHeaders.put(ETAG, eTag);
+            cacheHeaders.put(ETAG, eTag);
         }
 
         if (expiresOn != null) {
-        	cacheHeaders.put(EXPIRES, expiresOn);
+            cacheHeaders.put(EXPIRES, expiresOn);
         }
     }
 
-    public void updateOperation(Map<String, String> cacheHeaders) {
-    	String lastModified = cacheHeaders.get(LAST_MODIFIED);
-    	String eTag = cacheHeaders.get(ETAG);
+    public void updateOperation(final Map<String, String> cacheHeaders) {
+        String lastModified = cacheHeaders.get(LAST_MODIFIED);
+        String eTag = cacheHeaders.get(ETAG);
 
-    	if (lastModified != null) {
-    		headers.put("IF-MODIFIED-SINCE", lastModified);
-    	}
+        if (lastModified != null) {
+            headers.put("IF-MODIFIED-SINCE", lastModified);
+        }
 
-    	if (eTag != null) {
-    		headers.put("IF-NONE-MATCH", eTag);
-    	}
+        if (eTag != null) {
+            headers.put("IF-NONE-MATCH", eTag);
+        }
     }
 
     public boolean isCachable() {
-    	return httpMethod == HttpMethod.GET;
+        return httpMethod == HttpMethod.GET;
+    }
+
+    public String getUniqueIdentifier() {
+        String str = httpMethod.toString() + " " + urlString;
+
+        if (username != null && password != null) {
+            str = str + " " + username + ":" + password;
+        }
+
+        return MD5.encodeString(str);
+    }
+
+    public void setBasicAuthentication(final String username, final String password) {
+        this.username = username;
+        this.password = password;
+
+        String authStr = username + ":" + password;
+
+        try {
+            String authStrEncoded = Base64.encodeBytes(authStr.getBytes("UTF-8"));
+            headers.put("Authorization", "Basic " + authStrEncoded);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 }
-
