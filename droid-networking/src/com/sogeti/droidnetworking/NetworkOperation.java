@@ -372,7 +372,7 @@ public class NetworkOperation implements Runnable {
         return MD5.encodeString(str);
     }
 
-    public void setBasicAuthentication(final String username, final String password) {
+    public void setBasicAuthenticationHeader(final String username, final String password) {
         this.username = username;
         this.password = password;
 

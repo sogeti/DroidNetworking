@@ -29,7 +29,7 @@ public class AuthenticationTests extends InstrumentationTestCase {
         }
     }
     
-    public void testBasicAuthenticationTC1() {
+    public void testBasicAuthenticationWithNoUsernameOrPassword() {
         NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/secrets.json");
         
@@ -39,17 +39,30 @@ public class AuthenticationTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 401);
     }
     
-    public void testBasicAuthenticationTC2() {
+    public void testBasicAuthenticationWithUsernameAndPassword() {
         NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/secrets.json");
         
         // Set a username and password
-        operation.setBasicAuthentication("droid", "networking");
+        operation.setBasicAuthenticationHeader("droid", "networking");
         
         NetworkEngine.getInstance().executeOperation(operation);
         
         // We did supply a username and password. 200 OK
         assertTrue(operation.getHttpStatusCode() == 200);
+    }
+    
+    public void testBasicAuthenticationWithIncorrectUsernameAndPassword() {
+        NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/secrets.json");
+        
+        // Set a username and password
+        operation.setBasicAuthenticationHeader("wrong", "password");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // We did supply a username and password, but the wrong ones. 401 Unauthorized
+        assertTrue(operation.getHttpStatusCode() == 401);
     }
     
     private ArrayList<Message> getMessages() {
