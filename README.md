@@ -12,6 +12,7 @@ Features
 - HTTP requests happens in **a background thread**
 - Requests use a **threadpool** to limit concurrent resource usage
 - Automatic **gzip** response decoding support
+- Supports **Basic Authentication**
 - HTTP 1.1 **cache** *(under development)*
 
 Usage

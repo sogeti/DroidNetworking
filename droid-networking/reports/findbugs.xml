@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BugCollection version="2.0.1-rc2" sequence="0" timestamp="1347277203519" analysisTimestamp="1347277203540" release="">
+  <Project projectName="">
+    <Jar>/Users/martin/Documents/repos/android/droid-networking/droid-networking/bin</Jar>
+    <AuxClasspathEntry>/Users/martin/Documents/repos/android/droid-networking/droid-networking/${android.jar}</AuxClasspathEntry>
+  </Project>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" abbrev="Dm" category="I18N">
+    <Class classname="com.sogeti.droidnetworking.NetworkOperation">
+      <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="39" end="387" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.NetworkOperation" name="convertStreamToString" signature="(Ljava/io/InputStream;)Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="242" end="252" startBytecode="0" endBytecode="153" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java"/>
+    </Method>
+    <Method classname="java.io.InputStreamReader" name="&lt;init&gt;" signature="(Ljava/io/InputStream;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.InputStreamReader" start="55" end="62" startBytecode="0" endBytecode="83" sourcefile="InputStreamReader.java" sourcepath="java/io/InputStreamReader.java"/>
+    </Method>
+    <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="242" end="242" startBytecode="9" endBytecode="9" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java"/>
+  </BugInstance>
+  <BugInstance type="NP_NULL_PARAM_DEREF" priority="2" abbrev="NP" category="CORRECTNESS">
+    <Class classname="com.sogeti.droidnetworking.NetworkOperation">
+      <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="39" end="387" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.NetworkOperation" name="setCacheHeaders" signature="(Lorg/apache/http/HttpResponse;)V" isStatic="false">
+      <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="290" end="346" startBytecode="0" endBytecode="611" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="valueOf" signature="(Ljava/lang/String;)Ljava/lang/Integer;" isStatic="true" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Integer" start="554" end="554" startBytecode="0" endBytecode="33" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <Int value="1" role="INT_MAYBE_NULL_ARG"/>
+    <LocalVariable name="maxAge" register="12" pc="166" role="LOCAL_VARIABLE_VALUE_OF"/>
+    <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="323" end="323" startBytecode="189" endBytecode="189" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java" role="SOURCE_LINE_INVOKED"/>
+    <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="315" end="315" startBytecode="151" endBytecode="151" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java" role="SOURCE_LINE_NULL_VALUE"/>
+    <SourceLine classname="com.sogeti.droidnetworking.NetworkOperation" start="318" end="318" startBytecode="167" endBytecode="167" sourcefile="NetworkOperation.java" sourcepath="com/sogeti/droidnetworking/NetworkOperation.java" role="SOURCE_LINE_KNOWN_NULL"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="1" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="decode" signature="(Ljava/lang/String;I)[B" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1242" end="1297" startBytecode="0" endBytecode="775" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" start="29" end="78" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1290" end="1290" startBytecode="190" endBytecode="190" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1290" end="1290" startBytecode="190" endBytecode="190" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="1" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="decodeToObject" signature="(Ljava/lang/String;ILjava/lang/ClassLoader;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1341" end="1385" startBytecode="0" endBytecode="420" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" start="29" end="78" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1381" end="1381" startBytecode="70" endBytecode="70" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1381" end="1381" startBytecode="70" endBytecode="70" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="1" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="encodeBytesToBytes" signature="([BIII)[B" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="888" end="988" startBytecode="0" endBytecode="980" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" start="29" end="78" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="929" end="929" startBytecode="203" endBytecode="203" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="929" end="929" startBytecode="203" endBytecode="203" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="1" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="encodeObject" signature="(Ljava/io/Serializable;I)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="655" end="698" startBytecode="0" endBytecode="598" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" start="29" end="78" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="687" end="687" startBytecode="108" endBytecode="108" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="687" end="687" startBytecode="108" endBytecode="108" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" abbrev="Dm" category="I18N">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="decode" signature="(Ljava/lang/String;I)[B" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1242" end="1297" startBytecode="0" endBytecode="775" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Method classname="java.lang.String" name="getBytes" signature="()[B" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.String" start="986" end="986" startBytecode="0" endBytecode="39" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Method>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="1251" end="1251" startBytecode="26" endBytecode="26" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" abbrev="Dm" category="I18N">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="encodeBytes" signature="([BIII)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="831" end="838" startBytecode="0" endBytecode="144" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Method classname="java.lang.String" name="&lt;init&gt;" signature="([B)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.String" start="593" end="594" startBytecode="0" endBytecode="36" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Method>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="838" end="838" startBytecode="29" endBytecode="29" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" abbrev="Dm" category="I18N">
+    <Class classname="com.sogeti.droidnetworking.utilities.Base64">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="150" end="1626" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.Base64" name="encodeObject" signature="(Ljava/io/Serializable;I)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="655" end="698" startBytecode="0" endBytecode="598" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+    </Method>
+    <Method classname="java.lang.String" name="&lt;init&gt;" signature="([B)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.String" start="593" end="594" startBytecode="0" endBytecode="36" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Method>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.Base64" start="698" end="698" startBytecode="203" endBytecode="203" sourcefile="Base64.java" sourcepath="com/sogeti/droidnetworking/utilities/Base64.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" abbrev="Dm" category="I18N">
+    <Class classname="com.sogeti.droidnetworking.utilities.MD5">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.MD5" start="7" end="30" sourcefile="MD5.java" sourcepath="com/sogeti/droidnetworking/utilities/MD5.java"/>
+    </Class>
+    <Method classname="com.sogeti.droidnetworking.utilities.MD5" name="encodeString" signature="(Ljava/lang/String;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="com.sogeti.droidnetworking.utilities.MD5" start="13" end="30" startBytecode="0" endBytecode="211" sourcefile="MD5.java" sourcepath="com/sogeti/droidnetworking/utilities/MD5.java"/>
+    </Method>
+    <Method classname="java.lang.String" name="getBytes" signature="()[B" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.String" start="986" end="986" startBytecode="0" endBytecode="39" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Method>
+    <SourceLine classname="com.sogeti.droidnetworking.utilities.MD5" start="15" end="15" startBytecode="8" endBytecode="8" sourcefile="MD5.java" sourcepath="com/sogeti/droidnetworking/utilities/MD5.java"/>
+  </BugInstance>
+  <Errors errors="1" missingClasses="33">
+    <Error>
+      <ErrorMessage>Cannot open codebase filesystem:/Users/martin/Documents/repos/android/droid-networking/droid-networking/${android.jar}</ErrorMessage>
+      <Exception>java.io.FileNotFoundException: File /Users/martin/Documents/repos/android/droid-networking/droid-networking/${android.jar} doesn&apos;t exist</Exception>
+      <StackTrace>edu.umd.cs.findbugs.classfile.impl.ClassFactory.createFilesystemCodeBase(ClassFactory.java:107)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.classfile.impl.FilesystemCodeBaseLocator.openCodeBase(FilesystemCodeBaseLocator.java:75)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.classfile.impl.ClassPathBuilder.processWorkList(ClassPathBuilder.java:596)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.classfile.impl.ClassPathBuilder.build(ClassPathBuilder.java:220)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.FindBugs2.buildClassPath(FindBugs2.java:780)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.FindBugs2.execute(FindBugs2.java:218)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.FindBugs.runMain(FindBugs.java:369)</StackTrace>
+      <StackTrace>edu.umd.cs.findbugs.FindBugs2.main(FindBugs2.java:1300)</StackTrace>
+    </Error>
+    <MissingClass>android.content.Context</MissingClass>
+    <MissingClass>android.content.pm.PackageInfo</MissingClass>
+    <MissingClass>android.content.pm.PackageManager</MissingClass>
+    <MissingClass>android.content.pm.PackageManager$NameNotFoundException</MissingClass>
+    <MissingClass>android.os.Handler</MissingClass>
+    <MissingClass>android.os.Message</MissingClass>
+    <MissingClass>org.apache.http.Header</MissingClass>
+    <MissingClass>org.apache.http.HeaderElement</MissingClass>
+    <MissingClass>org.apache.http.HttpEntity</MissingClass>
+    <MissingClass>org.apache.http.HttpResponse</MissingClass>
+    <MissingClass>org.apache.http.StatusLine</MissingClass>
+    <MissingClass>org.apache.http.client.ClientProtocolException</MissingClass>
+    <MissingClass>org.apache.http.client.entity.UrlEncodedFormEntity</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpDelete</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpGet</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpHead</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpPost</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpPut</MissingClass>
+    <MissingClass>org.apache.http.client.methods.HttpUriRequest</MissingClass>
+    <MissingClass>org.apache.http.conn.ClientConnectionManager</MissingClass>
+    <MissingClass>org.apache.http.conn.scheme.PlainSocketFactory</MissingClass>
+    <MissingClass>org.apache.http.conn.scheme.Scheme</MissingClass>
+    <MissingClass>org.apache.http.conn.scheme.SchemeRegistry</MissingClass>
+    <MissingClass>org.apache.http.conn.scheme.SocketFactory</MissingClass>
+    <MissingClass>org.apache.http.conn.ssl.SSLSocketFactory</MissingClass>
+    <MissingClass>org.apache.http.conn.ssl.X509HostnameVerifier</MissingClass>
+    <MissingClass>org.apache.http.entity.HttpEntityWrapper</MissingClass>
+    <MissingClass>org.apache.http.impl.client.DefaultHttpClient</MissingClass>
+    <MissingClass>org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager</MissingClass>
+    <MissingClass>org.apache.http.message.BasicNameValuePair</MissingClass>
+    <MissingClass>org.apache.http.params.BasicHttpParams</MissingClass>
+    <MissingClass>org.apache.http.params.HttpConnectionParams</MissingClass>
+    <MissingClass>org.apache.http.params.HttpParams</MissingClass>
+  </Errors>
+  <FindBugsSummary timestamp="Mon, 10 Sep 2012 13:40:03 +0200" total_classes="20" referenced_classes="125" total_bugs="10" total_size="897" num_packages="2" vm_version="20.8-b03-424" cpu_seconds="36.49" clock_seconds="12.21" peak_mbytes="72.65" alloc_mbytes="123.94" gc_seconds="0.23" priority_2="1" priority_1="9">
+    <PackageStats package="com.sogeti.droidnetworking" total_bugs="2" total_types="15" total_size="335" priority_2="1" priority_1="1">
+      <ClassStats class="com.sogeti.droidnetworking.BuildConfig" sourceFile="BuildConfig.java" interface="false" size="4" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkEngine" sourceFile="NetworkEngine.java" interface="false" size="69" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkEngine$HttpMethod" sourceFile="NetworkEngine.java" interface="false" size="13" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation" sourceFile="NetworkOperation.java" interface="false" size="187" bugs="2" priority_2="1" priority_1="1"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation$1" sourceFile="NetworkOperation.java" interface="false" size="4" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation$GzipDecompressingEntity" sourceFile="NetworkOperation.java" interface="false" size="9" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation$NetworkOperationHandler" sourceFile="NetworkOperation.java" interface="false" size="13" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation$OperationListener" sourceFile="NetworkOperation.java" interface="true" size="3" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.NetworkOperation$ResponseParser" sourceFile="NetworkOperation.java" interface="true" size="2" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R" sourceFile="R.java" interface="false" size="4" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R$attr" sourceFile="R.java" interface="false" size="3" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R$drawable" sourceFile="R.java" interface="false" size="6" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R$id" sourceFile="R.java" interface="false" size="6" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R$layout" sourceFile="R.java" interface="false" size="6" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.R$string" sourceFile="R.java" interface="false" size="6" bugs="0"/>
+    </PackageStats>
+    <PackageStats package="com.sogeti.droidnetworking.utilities" total_bugs="8" total_types="5" total_size="562" priority_1="8">
+      <ClassStats class="com.sogeti.droidnetworking.utilities.Base64" sourceFile="Base64.java" interface="false" size="386" bugs="7" priority_1="7"/>
+      <ClassStats class="com.sogeti.droidnetworking.utilities.Base64$1" sourceFile="Base64.java" interface="false" size="9" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.utilities.Base64$InputStream" sourceFile="Base64.java" interface="false" size="75" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.utilities.Base64$OutputStream" sourceFile="Base64.java" interface="false" size="77" bugs="0"/>
+      <ClassStats class="com.sogeti.droidnetworking.utilities.MD5" sourceFile="MD5.java" interface="false" size="15" bugs="1" priority_1="1"/>
+    </PackageStats>
+    <FindBugsProfile>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FieldItemSummary" totalMilliseconds="769" invocations="125" avgMicrosecondsPerInvocation="6155" maxMicrosecondsPerInvocation="64291" standardDeviationMircosecondsPerInvocation="11572"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.ValueNumberDataflowFactory" totalMilliseconds="766" invocations="120" avgMicrosecondsPerInvocation="6385" maxMicrosecondsPerInvocation="51657" standardDeviationMircosecondsPerInvocation="11287"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.ClassInfoAnalysisEngine" totalMilliseconds="711" invocations="596" avgMicrosecondsPerInvocation="1194" maxMicrosecondsPerInvocation="31191" standardDeviationMircosecondsPerInvocation="2964"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.TypeDataflowFactory" totalMilliseconds="674" invocations="120" avgMicrosecondsPerInvocation="5617" maxMicrosecondsPerInvocation="40642" standardDeviationMircosecondsPerInvocation="8940"/>
+      <ClassProfile name="edu.umd.cs.findbugs.ba.npe.NullDerefAndRedundantComparisonFinder" totalMilliseconds="633" invocations="104" avgMicrosecondsPerInvocation="6093" maxMicrosecondsPerInvocation="52134" standardDeviationMircosecondsPerInvocation="10294"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.ExplicitSerialization" totalMilliseconds="628" invocations="125" avgMicrosecondsPerInvocation="5028" maxMicrosecondsPerInvocation="43623" standardDeviationMircosecondsPerInvocation="9138"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.IsNullValueDataflowFactory" totalMilliseconds="561" invocations="104" avgMicrosecondsPerInvocation="5400" maxMicrosecondsPerInvocation="52708" standardDeviationMircosecondsPerInvocation="9903"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.UnconditionalValueDerefDataflowFactory" totalMilliseconds="506" invocations="104" avgMicrosecondsPerInvocation="4867" maxMicrosecondsPerInvocation="54761" standardDeviationMircosecondsPerInvocation="9891"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.NoteDirectlyRelevantTypeQualifiers" totalMilliseconds="340" invocations="125" avgMicrosecondsPerInvocation="2720" maxMicrosecondsPerInvocation="25941" standardDeviationMircosecondsPerInvocation="4734"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FindRefComparison$SpecialTypeAnalysis" totalMilliseconds="301" invocations="85" avgMicrosecondsPerInvocation="3551" maxMicrosecondsPerInvocation="25180" standardDeviationMircosecondsPerInvocation="5769"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.CFGFactory" totalMilliseconds="300" invocations="105" avgMicrosecondsPerInvocation="2861" maxMicrosecondsPerInvocation="33446" standardDeviationMircosecondsPerInvocation="4951"/>
+      <ClassProfile name="edu.umd.cs.findbugs.OpcodeStack$JumpInfoFactory" totalMilliseconds="271" invocations="313" avgMicrosecondsPerInvocation="866" maxMicrosecondsPerInvocation="27457" standardDeviationMircosecondsPerInvocation="1763"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.ConstantDataflowFactory" totalMilliseconds="228" invocations="104" avgMicrosecondsPerInvocation="2201" maxMicrosecondsPerInvocation="26070" standardDeviationMircosecondsPerInvocation="4464"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.ClassDataAnalysisEngine" totalMilliseconds="211" invocations="599" avgMicrosecondsPerInvocation="353" maxMicrosecondsPerInvocation="11892" standardDeviationMircosecondsPerInvocation="494"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.StreamResourceTracker" totalMilliseconds="202" invocations="40" avgMicrosecondsPerInvocation="5071" maxMicrosecondsPerInvocation="18981" standardDeviationMircosecondsPerInvocation="4622"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.BuildObligationPolicyDatabase" totalMilliseconds="172" invocations="125" avgMicrosecondsPerInvocation="1383" maxMicrosecondsPerInvocation="16195" standardDeviationMircosecondsPerInvocation="2532"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FunctionsThatMightBeMistakenForProcedures" totalMilliseconds="155" invocations="125" avgMicrosecondsPerInvocation="1244" maxMicrosecondsPerInvocation="20034" standardDeviationMircosecondsPerInvocation="2569"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.CalledMethods" totalMilliseconds="134" invocations="125" avgMicrosecondsPerInvocation="1078" maxMicrosecondsPerInvocation="11044" standardDeviationMircosecondsPerInvocation="1962"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.OverridingEqualsNotSymmetrical" totalMilliseconds="129" invocations="125" avgMicrosecondsPerInvocation="1034" maxMicrosecondsPerInvocation="17433" standardDeviationMircosecondsPerInvocation="2113"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FindOpenStream" totalMilliseconds="128" invocations="20" avgMicrosecondsPerInvocation="6428" maxMicrosecondsPerInvocation="53880" standardDeviationMircosecondsPerInvocation="13196"/>
+      <ClassProfile name="edu.umd.cs.findbugs.util.TopologicalSort" totalMilliseconds="126" invocations="539" avgMicrosecondsPerInvocation="234" maxMicrosecondsPerInvocation="4434" standardDeviationMircosecondsPerInvocation="472"/>
+    </FindBugsProfile>
+  </FindBugsSummary>
+  <ClassFeatures></ClassFeatures>
+  <History></History>
+</BugCollection>
