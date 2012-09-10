@@ -90,11 +90,11 @@
 	        </findbugs>
 	    </target>
 	    
-	    <!--<taskdef resource="checkstyletask.properties" classpath="${checkstyle.home}/checkstyle-5.5-all.jar"/> 
+	    <taskdef resource="checkstyletask.properties" classpath="${checkstyle.home}/checkstyle-5.5-all.jar"/> 
 
 	    <checkstyle config="sun_checks.xml" failOnViolation="false">
 	      <fileset dir="src" includes="**/*.java"/>
 	      <formatter type="xml" toFile="checkstyle_errors.xml"/>
-	    </checkstyle>-->
+	    </checkstyle>
 
 </project>
