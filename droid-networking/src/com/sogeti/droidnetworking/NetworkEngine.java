@@ -39,7 +39,7 @@ public class NetworkEngine {
 
     private DefaultHttpClient httpClient;
 
-    public static NetworkEngine getInstance() {
+    public static synchronized NetworkEngine getInstance() {
         if (networkEngine == null) {
             networkEngine = new NetworkEngine();
         }

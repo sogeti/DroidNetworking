@@ -268,7 +268,7 @@ public class NetworkOperation implements Runnable {
         return entity;
     }
 
-    private class GzipDecompressingEntity extends HttpEntityWrapper {
+    private static class GzipDecompressingEntity extends HttpEntityWrapper {
         public GzipDecompressingEntity(final HttpEntity entity) {
             super(entity);
         }
