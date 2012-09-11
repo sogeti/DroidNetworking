@@ -36,7 +36,7 @@ public class CacheTests extends InstrumentationTestCase {
         
     }
     
-    public void testHeadersTC1() {
+    public void testCacheHeaders() {
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -64,7 +64,7 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(cacheHeaders.get("Last-Modified") == null);
     }
     
-    public void testNotModifiedTC1() {
+    public void testNotModified() {
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -89,7 +89,37 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 304);
     }
     
-    public void testUniqueIdentifierTC1() {
+    public void testResponseData() {
+        NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+            
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == false);
+        assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));
+        
+        byte[] responseData = operation.getResponseData();
+        
+        // There should be some response data   
+        assertFalse(responseData == null);
+        
+        // Create an new operation
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+        
+        // Set cached data
+        operation.setCachedData(responseData);
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // Check that we get a 200 response, that is cached with the same data as before
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == true);
+        assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));  
+    }
+    
+    public void testUniqueIdentifier() {
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             

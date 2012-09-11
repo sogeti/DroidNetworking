@@ -1,9 +1,9 @@
 package com.sogeti.droidnetworking;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,6 +31,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 import com.sogeti.droidnetworking.NetworkEngine.HttpMethod;
 import com.sogeti.droidnetworking.external.Base64;
+import com.sogeti.droidnetworking.external.CachingInputStream;
 import com.sogeti.droidnetworking.external.MD5;
 
 import android.os.Handler;
@@ -55,12 +56,13 @@ public class NetworkOperation implements Runnable {
     private HttpUriRequest request;
     private ResponseParser parser;
     private OperationListener listener;
-    private String responseString;
     private int httpStatusCode;
     private boolean useGzip = true;
     private Map<String, String> cacheHeaders;
     private String username;
     private String password;
+    private byte[] responseData;
+    private byte[] cachedData;
 
     public interface ResponseParser {
         void parse(final InputStream is) throws IOException;
@@ -86,9 +88,7 @@ public class NetworkOperation implements Runnable {
         if (params != null) {
             this.params.putAll(params);
         }
-    }
-
-    public void execute() {
+        
         switch (httpMethod) {
             case GET :
                 request = new HttpGet(urlString);
@@ -123,12 +123,29 @@ public class NetworkOperation implements Runnable {
                     ((HttpPut) request).setEntity(new UrlEncodedFormEntity(nameValuePairs));
                 }
             } catch (UnsupportedEncodingException e) {
-
+                e.printStackTrace();
             }
         }
 
         for (String header : headers.keySet()) {
             request.addHeader(header, headers.get(header));
+        }
+    }
+
+    public void execute() {
+        if (cachedData != null) {
+            try {
+                if (parser != null) {
+                    InputStream is = new ByteArrayInputStream(cachedData);
+                    parser.parse(is);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            httpStatusCode = 200;
+
+            return;
         }
 
         try {
@@ -144,12 +161,23 @@ public class NetworkOperation implements Runnable {
                 InputStream is = entity.getContent();
 
                 if (parser != null) {
-                    parser.parse(is);
-                } else {
-                    responseString = convertStreamToString(is);
-                }
+                    CachingInputStream cis = new CachingInputStream(is);
+                    parser.parse(cis);
 
-                is.close();
+                    responseData = cis.getCache();
+
+                    cis.close();
+                } else {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[1024];
+                    int read = 0;
+
+                    while ((read = is.read(buffer, 0, buffer.length)) != -1) {
+                        baos.write(buffer, 0, read);
+                    }
+
+                    responseData = baos.toByteArray();
+                }
 
                 if (entity != null) {
                     entity.consumeContent();
@@ -203,7 +231,15 @@ public class NetworkOperation implements Runnable {
     }
 
     public String getResponseString() {
-        return responseString;
+        return getResponseString("UTF-8");
+    }
+
+    public String getResponseString(final String encoding) {
+        try {
+            return new String(getResponseData(), encoding);
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     public HttpUriRequest getRequest() {
@@ -238,18 +274,20 @@ public class NetworkOperation implements Runnable {
         this.cacheHeaders = cacheHeaders;
     }
 
-    private String convertStreamToString(final InputStream is) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-        StringBuilder sb = new StringBuilder();
-
-        String line = null;
-
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
+    public byte[] getResponseData() {
+        if (cachedData != null) {
+            return cachedData;
+        } else {
+            return responseData;
         }
+    }
 
-        return sb.toString();
+    public void setCachedData(final byte[] cachedData) {
+        this.cachedData = cachedData;
+    }
+
+    public boolean isCachedResponse() {
+        return cachedData != null;
     }
 
     private HttpEntity getDecompressingEntity(final HttpEntity entity) {
@@ -350,11 +388,11 @@ public class NetworkOperation implements Runnable {
         String eTag = cacheHeaders.get(ETAG);
 
         if (lastModified != null) {
-            headers.put("IF-MODIFIED-SINCE", lastModified);
+            request.addHeader("IF-MODIFIED-SINCE", lastModified);
         }
 
         if (eTag != null) {
-            headers.put("IF-NONE-MATCH", eTag);
+            request.addHeader("IF-NONE-MATCH", eTag);
         }
     }
 
@@ -380,7 +418,7 @@ public class NetworkOperation implements Runnable {
 
         try {
             String authStrEncoded = Base64.encodeBytes(authStr.getBytes("UTF-8"));
-            headers.put("Authorization", "Basic " + authStrEncoded);
+            request.addHeader("Authorization", "Basic " + authStrEncoded);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
