@@ -1,9 +1,11 @@
-package com.sogeti.droidnetworking.utilities;
+package com.sogeti.droidnetworking.external;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public final class MD5 {
+    private static final int BIT_MASK = 0xFF;
+    
     private MD5() {
     }
 
@@ -19,7 +21,7 @@ public final class MD5 {
             StringBuffer hexString = new StringBuffer();
 
             for (int i = 0; i < messageDigest.length; i++) {
-                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+                hexString.append(Integer.toHexString(BIT_MASK & messageDigest[i]));
             }
 
             return hexString.toString();

@@ -30,8 +30,8 @@ import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.sogeti.droidnetworking.NetworkEngine.HttpMethod;
-import com.sogeti.droidnetworking.utilities.Base64;
-import com.sogeti.droidnetworking.utilities.MD5;
+import com.sogeti.droidnetworking.external.Base64;
+import com.sogeti.droidnetworking.external.MD5;
 
 import android.os.Handler;
 import android.os.Message;

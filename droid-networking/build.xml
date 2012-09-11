@@ -85,7 +85,7 @@
 	    <target name="findbugs">
 	        <mkdir dir="reports" />
 	        <findbugs home="${findbugs.home}" output="xml" outputFile="reports/findbugs.xml" excludeFilter="findbugs-exclude.xml">
-	            <auxClasspath path="${android.jar}" />
+	            <auxClasspath path="${project.target.android.jar}" />
 	            <class location="${out.dir}" />
 	        </findbugs>
 	    </target>
@@ -94,7 +94,7 @@
 
 	    <checkstyle config="sun_checks.xml" failOnViolation="false">
 	      <fileset dir="src">
-	          <exclude name="com/sogeti/droidnetworking/utilities/Base64.java"/>
+	          <exclude name="com/sogeti/droidnetworking/external/**/*.java"/>
 	          <include name="**/*.java"/>  	  
 	      </fileset>
 	      <formatter type="xml" toFile="checkstyle_errors.xml"/>

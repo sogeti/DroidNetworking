@@ -145,7 +145,7 @@
  * @author rob@iharder.net
  * @version 2.3.7
  */
-package com.sogeti.droidnetworking.utilities;
+package com.sogeti.droidnetworking.external;
 
 public class Base64
 {

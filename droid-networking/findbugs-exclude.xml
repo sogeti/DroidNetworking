@@ -4,6 +4,6 @@
     <Bug pattern="NM_CLASS_NAMING_CONVENTION"/>
  </Match>
  <Match>
-    <Class name="~.*?Base64.*"/>
+    <Package name="~com\.sogeti\.droidnetworking\.external.*"/>
  </Match>
 </FindBugsFilter>
