@@ -43,4 +43,5 @@ Check out the test cases for more examples how to use the DroidNetworking librar
 
 License
 --------
-TBD
+Apache License, Version 2.0
+http://www.apache.org/licenses/LICENSE-2.0
