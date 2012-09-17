@@ -433,7 +433,7 @@ public class NetworkOperation implements Runnable {
         String authStr = username + ":" + password;
 
         try {
-            String authStrEncoded = Base64.encodeBytes(authStr.getBytes("UTF-8"));
+            String authStrEncoded = Base64.encode(authStr.getBytes("UTF-8"));
             request.addHeader("Authorization", "Basic " + authStrEncoded);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
