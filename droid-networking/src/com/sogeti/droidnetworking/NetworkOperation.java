@@ -79,6 +79,8 @@ public class NetworkOperation implements Runnable {
     private String password;
     private byte[] responseData;
     private byte[] cachedData;
+    private CacheHandler cacheHandler;
+    private boolean fresh = false;
 
     public interface ResponseParser {
         void parse(final InputStream is) throws IOException;
@@ -88,6 +90,10 @@ public class NetworkOperation implements Runnable {
         void onCompletion(final NetworkOperation operation);
 
         void onError();
+    }
+
+    public interface CacheHandler {
+        void cache(final NetworkOperation operation);
     }
 
     public NetworkOperation(final String urlString, final Map<String, String> params, final HttpMethod httpMethod) {
@@ -104,7 +110,7 @@ public class NetworkOperation implements Runnable {
         if (params != null) {
             this.params.putAll(params);
         }
-        
+
         switch (httpMethod) {
             case GET :
                 request = new HttpGet(urlString);
@@ -149,60 +155,68 @@ public class NetworkOperation implements Runnable {
     }
 
     public void execute() {
-        if (cachedData != null) {
-            try {
-                if (parser != null) {
-                    InputStream is = new ByteArrayInputStream(cachedData);
-                    parser.parse(is);
+    	if (!fresh) {
+	        try {
+	            response = NetworkEngine.getInstance().getHttpClient().execute(request);
+
+	            setCacheHeaders(response);
+
+	            httpStatusCode = response.getStatusLine().getStatusCode();
+
+	            if (response.getEntity() != null) {
+	                HttpEntity entity = getDecompressingEntity(response.getEntity());
+
+	                InputStream is = entity.getContent();
+
+	                if (parser != null) {
+	                    CachingInputStream cis = new CachingInputStream(is);
+	                    parser.parse(cis);
+
+	                    responseData = cis.getCache();
+
+	                    cis.close();
+	                } else {
+	                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	                    byte[] buffer = new byte[1024];
+	                    int read = 0;
+
+	                    while ((read = is.read(buffer, 0, buffer.length)) != -1) {
+	                        baos.write(buffer, 0, read);
+	                    }
+
+	                    responseData = baos.toByteArray();
+	                }
+
+	                if (httpStatusCode >= 200 && httpStatusCode < 300 && isCachable()) {
+	                    cachedData = null;
+
+	                    if (cacheHandler != null) {
+	                        cacheHandler.cache(this);
+	                    }
+	                }
+
+	                if (entity != null) {
+	                    entity.consumeContent();
+	                }
+	            }
+	        } catch (ClientProtocolException e) {
+	            e.printStackTrace();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+    	}
+
+    	if (cachedData != null) {
+    		httpStatusCode = 200;
+
+            if (parser != null) {
+            	try {
+            		InputStream is = new ByteArrayInputStream(cachedData);
+            		parser.parse(is);
+            	} catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-
-            httpStatusCode = 200;
-
-            return;
-        }
-
-        try {
-            response = NetworkEngine.getInstance().getHttpClient().execute(request);
-
-            setCacheHeaders(response);
-
-            httpStatusCode = response.getStatusLine().getStatusCode();
-
-            if (response.getEntity() != null) {
-                HttpEntity entity = getDecompressingEntity(response.getEntity());
-
-                InputStream is = entity.getContent();
-
-                if (parser != null) {
-                    CachingInputStream cis = new CachingInputStream(is);
-                    parser.parse(cis);
-
-                    responseData = cis.getCache();
-
-                    cis.close();
-                } else {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[1024];
-                    int read = 0;
-
-                    while ((read = is.read(buffer, 0, buffer.length)) != -1) {
-                        baos.write(buffer, 0, read);
-                    }
-
-                    responseData = baos.toByteArray();
-                }
-
-                if (entity != null) {
-                    entity.consumeContent();
-                }
-            }
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -306,7 +320,23 @@ public class NetworkOperation implements Runnable {
         return cachedData != null;
     }
 
-    private HttpEntity getDecompressingEntity(final HttpEntity entity) {
+    public CacheHandler getCacheHandler() {
+        return cacheHandler;
+    }
+
+    public void setCacheHandler(final CacheHandler cacheHandler) {
+        this.cacheHandler = cacheHandler;
+    }
+
+	public boolean isFresh() {
+		return fresh;
+	}
+
+	public void setFresh(final boolean fresh) {
+		this.fresh = fresh;
+	}
+
+	private HttpEntity getDecompressingEntity(final HttpEntity entity) {
         Header header = entity.getContentEncoding();
 
         if (header != null) {
@@ -374,7 +404,7 @@ public class NetworkOperation implements Runnable {
                     }
 
                     expiresOnDate = new Date();
-                    expiresOnDate.setTime(Integer.valueOf(maxAge) * ONE_SECOND_IN_MS);
+                    expiresOnDate.setTime(expiresOnDate.getTime() + Integer.valueOf(maxAge) * ONE_SECOND_IN_MS);
                 }
 
                 if (subString.contains("no-cache")) {
@@ -382,7 +412,7 @@ public class NetworkOperation implements Runnable {
                 }
             }
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyyy HH:mm:ss z");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
             expiresOn = simpleDateFormat.format(expiresOnDate);
         }
 

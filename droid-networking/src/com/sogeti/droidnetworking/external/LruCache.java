@@ -203,18 +203,18 @@ public class LruCache<K, V> {
                 if (size <= maxSize) {
                     break;
                 }
-                
+ 
                 // Map.Entry<K, V> toEvict = map.eldest();
                 // if (toEvict == null) {
                 //   break;
                 // }
 
                 Map.Entry<K, V> toEvict;
-                
-                try {
-                    toEvict = map.entrySet().iterator().next();
-                } catch (NoSuchElementException e) {
-                    break;
+
+                if (map.entrySet().iterator().hasNext()) {
+                	toEvict = map.entrySet().iterator().next();
+                } else {
+                	break;
                 }
 
                 key = toEvict.getKey();

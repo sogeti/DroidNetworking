@@ -38,10 +38,11 @@ public class BasicHttpTests extends InstrumentationTestCase {
     @Override
     public void setUp() {
         NetworkEngine.getInstance().init(getInstrumentation().getContext());
+        NetworkEngine.getInstance().setUseCache(false);
     }
     
     @Override
-    public void tearDown() {
+    public void tearDown() {    	
         for (Message message : getMessages()) {
             deleteMessage(message.getId());
         }
@@ -82,7 +83,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
         assertTrue(succeeded);
     }
     
-    public void testGetTC1() {
+    public void testGetTC1() {   	
         Message message1 = postMessage("Post 3 title", "Post 3 body");
         assertFalse(message1 == null);
         Message message2 = postMessage("Post 4 title", "Post 4 body");
@@ -93,7 +94,7 @@ public class BasicHttpTests extends InstrumentationTestCase {
         assertTrue(messages.size() >= 2);  
     }
     
-    public void testGetTC2() {
+    public void testGetTC2() {   	
         Message message1 = postMessage("Post 5 title", "Post 5 body");
         assertFalse(message1 == null);
         

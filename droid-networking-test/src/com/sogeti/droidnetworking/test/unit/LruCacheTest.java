@@ -1,5 +1,7 @@
 package com.sogeti.droidnetworking.test.unit;
 
+import java.util.Map;
+
 import com.sogeti.droidnetworking.external.LruCache;
 
 import junit.framework.TestCase;
@@ -71,6 +73,18 @@ public class LruCacheTest extends TestCase {
         cache.put("2", "BB");
         assertTrue(cache.size() == 2);
         cache.put("3", "CC");
-        assertTrue(cache.size() == 3);   
+        assertTrue(cache.size() == 3);
+        
+        // Number of times a value was recreated
+        assertTrue(cache.createCount() == 0);
+        
+        // Create a snapshot of the cache
+        Map<String, String> snapshot = cache.snapshot(); 
+        
+        // It should not be null
+        assertFalse(snapshot == null);
+        
+        // It should have a size of 3
+        assertTrue(snapshot.size() == 3);
     }
 }

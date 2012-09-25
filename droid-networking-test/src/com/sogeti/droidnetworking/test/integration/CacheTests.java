@@ -40,6 +40,7 @@ public class CacheTests extends InstrumentationTestCase {
     @Override
     public void setUp() {
         NetworkEngine.getInstance().init(getInstrumentation().getContext());
+        NetworkEngine.getInstance().setUseCache(true);
         
         // Make sure there are no messages, otherwise the ETag won't match the testcase
         for (Message message : getMessages()) {
@@ -53,6 +54,8 @@ public class CacheTests extends InstrumentationTestCase {
     }
     
     public void testCacheHeaders() {
+        NetworkEngine.getInstance().clearCache();
+        
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -81,6 +84,8 @@ public class CacheTests extends InstrumentationTestCase {
     }
     
     public void testNotModified() {
+        NetworkEngine.getInstance().clearCache();
+        
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -90,6 +95,8 @@ public class CacheTests extends InstrumentationTestCase {
         
         // Save the cache headers from the first request
         Map<String, String> cacheHeaders = operation.getCacheHeaders();
+        
+        NetworkEngine.getInstance().clearCache();
         
         // Create a new request
         operation = NetworkEngine.getInstance()
@@ -106,6 +113,8 @@ public class CacheTests extends InstrumentationTestCase {
     }
     
     public void testResponseData() {
+        NetworkEngine.getInstance().clearCache();
+        
         NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             
@@ -124,9 +133,6 @@ public class CacheTests extends InstrumentationTestCase {
         operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
         
-        // Set cached data
-        operation.setCachedData(responseData);
-        
         NetworkEngine.getInstance().executeOperation(operation);
         
         // Check that we get a 200 response, that is cached with the same data as before
@@ -136,6 +142,8 @@ public class CacheTests extends InstrumentationTestCase {
     }
     
     public void testUniqueIdentifier() {
+        NetworkEngine.getInstance().clearCache();
+        
     	NetworkOperation operation = NetworkEngine.getInstance()
                 .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
             

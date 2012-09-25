@@ -36,6 +36,7 @@ public class AuthenticationTests extends InstrumentationTestCase {
     @Override
     public void setUp() {
         NetworkEngine.getInstance().init(getInstrumentation().getContext());
+        NetworkEngine.getInstance().setUseCache(false);
     }
     
     @Override

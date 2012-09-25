@@ -16,6 +16,9 @@
 
 package com.sogeti.droidnetworking;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +37,9 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import com.sogeti.droidnetworking.NetworkOperation.CacheHandler;
+import com.sogeti.droidnetworking.external.LruCache;
+
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -43,6 +49,8 @@ public class NetworkEngine {
     private static final int HTTPS_PORT = 443;
     private static final int SOCKET_TIMEOUT = 5000;
     private static final int CONNECTION_TIMEOUT = 5000;
+
+    private static final int DEFAULT_MEMORY_CACHE_SIZE = 2 * 1024 * 1024; // 2MB
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, HEAD
@@ -55,6 +63,10 @@ public class NetworkEngine {
 
     private DefaultHttpClient httpClient;
 
+    private LruCache<String, CacheEntry> memoryCache;
+    private boolean useCache = false;
+    private int memoryCacheSize = DEFAULT_MEMORY_CACHE_SIZE;
+
     public static synchronized NetworkEngine getInstance() {
         if (networkEngine == null) {
             networkEngine = new NetworkEngine();
@@ -65,6 +77,12 @@ public class NetworkEngine {
 
     public NetworkEngine() {
         sharedNetworkQueue = Executors.newFixedThreadPool(2);
+
+        memoryCache = new LruCache<String, CacheEntry>(memoryCacheSize) {
+            protected int sizeOf(final String key, final CacheEntry entry) {
+                return entry.size();
+            }
+        };
     }
 
     public void init(final Context context) {
@@ -122,6 +140,14 @@ public class NetworkEngine {
         NetworkOperation operation = new NetworkOperation(urlString, params, httpMethod);
 
         prepareHeaders(operation);
+        operation.setCacheHandler(new CacheHandler() {
+            @Override
+            public void cache(final NetworkOperation operation) {               
+                CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
+
+                memoryCache.put(operation.getUniqueIdentifier(), entry);
+            }
+        });
 
         return operation;
     }
@@ -134,19 +160,113 @@ public class NetworkEngine {
         enqueueOperation(operation, false);
     }
 
-    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {
-        sharedNetworkQueue.submit(operation);
+    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {        
+    	executeOperation(operation, forceReload, true);
     }
 
     public void executeOperation(final NetworkOperation operation) {
         executeOperation(operation, false);
     }
 
-    public void executeOperation(final NetworkOperation operation, final boolean forceReload) {
-        operation.execute();
+    public void executeOperation(final NetworkOperation operation, final boolean forceReload) {      
+        executeOperation(operation, forceReload, false);
+    }
+
+    private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {      
+        long expiryTimeInSeconds = 0;
+
+        if (operation.isCachable() && useCache) {
+        	if (!forceReload) {
+		        CacheEntry entry = memoryCache.get(operation.getUniqueIdentifier());
+
+		        if (entry != null) {
+		        	operation.setCachedData(entry.getResponseData());
+
+		        	if (entry.getCacheHeaders() != null) {
+		        		SimpleDateFormat simpleDateFormat
+		        			= new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+		        		String expiresOn = entry.getCacheHeaders().get("Expires");
+
+		        		try {
+			                Date expiresOnDate = simpleDateFormat.parse(expiresOn);
+			                Date now = new Date();
+			                expiryTimeInSeconds = expiresOnDate.getTime() - now.getTime();
+			            } catch (ParseException e) {
+			            	e.printStackTrace();
+			            } finally {
+			            	operation.updateOperation(entry.getCacheHeaders());
+			            }
+		        	}
+		        }
+        	}
+
+        	if (expiryTimeInSeconds <= 0 || forceReload) {
+        		if (enqueue) {
+        			sharedNetworkQueue.submit(operation);
+        		} else {
+        			operation.execute();
+        		}
+        	} else {
+        		operation.setFresh(true); // Cache is fresh enough
+
+        		if (enqueue) {
+        			sharedNetworkQueue.submit(operation);
+        		} else {
+        			operation.execute();
+        		}
+        	}
+        } else {
+        	if (enqueue) {
+    			sharedNetworkQueue.submit(operation);
+    		} else {
+    			operation.execute();
+    		}
+        }
     }
 
     public DefaultHttpClient getHttpClient() {
         return httpClient;
+    }
+
+    public void clearCache() {
+        memoryCache.evictAll();
+    }
+
+    public void setUseCache(boolean useCache) {
+    	this.useCache = useCache;
+    }
+
+    public void setMemoryCacheSize(int memoryCacheSize) {
+    	this.memoryCacheSize = memoryCacheSize;
+    }
+
+    public static class CacheEntry {
+        private Map<String, String> cacheHeaders;
+        private byte[] responseData;
+
+        public CacheEntry(final Map<String, String> cacheHeaders, final byte[] responseData) {
+            this.cacheHeaders = cacheHeaders;
+            this.responseData = responseData;
+        }
+
+        public Map<String, String> getCacheHeaders() {
+            return cacheHeaders;
+        }
+
+        public void setCacheHeaders(final Map<String, String> cacheHeaders) {
+            this.cacheHeaders = cacheHeaders;
+        }
+
+        public byte[] getResponseData() {
+            return responseData;
+        }
+
+        public void setResponseData(final byte[] responseData) {
+            this.responseData = responseData;
+        }
+
+        public int size() {
+            return responseData.length;
+        }
     }
 }
