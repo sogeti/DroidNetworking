@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.sogeti.droidnetworking.NetworkEngine;
 import com.sogeti.droidnetworking.NetworkOperation;
@@ -75,8 +76,7 @@ public class CacheTests extends InstrumentationTestCase {
 		} catch (ParseException e) {
 			assertTrue(false);
 		}
-        
-        
+
         // ETag is a MD5 sum of the content. If the content changes this ETag will not be valid.
         assertFalse(cacheHeaders.get("ETag") == null);
         assertTrue(cacheHeaders.get("ETag").equalsIgnoreCase("\"d751713988987e9331980363e24189ce\""));
@@ -145,20 +145,74 @@ public class CacheTests extends InstrumentationTestCase {
     public void testCacheTC2() {
         NetworkEngine.getInstance().clearCache();
         
+        // Delete all messages
+        for (Message message : getMessages()) {
+            deleteMessage(message.getId());
+        }
+        
+        postMessage("title 1", "body 1");
+        
+        ArrayList<Message> messages = getMessages();
+        
         NetworkOperation operation = NetworkEngine.getInstance()
-                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
             
         NetworkEngine.getInstance().executeOperation(operation);
         
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == false);
         
-        // Post a new message
-        postMessage("title", "body");
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // Check that we get a 200 response, that is cached with the same data as before
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == true);
+        
+        // Update the message so that the Etag changes
+        putMessage(messages.get(0).getId(), "title 2", "body 2");
+        
+        try {
+          Thread.sleep(11000L);    // after 10 seconds the cache is no longer valid
+        } catch (Exception e) {
+        	
+        } 
         
         // Create an new operation
         operation = NetworkEngine.getInstance()
-                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // Check that we get a 200 response, that is not cached
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == false);
+    }
+    
+    public void testCacheTC3() {
+NetworkEngine.getInstance().clearCache();
+        
+        // Delete all messages
+        for (Message message : getMessages()) {
+            deleteMessage(message.getId());
+        }
+        
+        postMessage("title 1", "body 1");
+        
+        ArrayList<Message> messages = getMessages();
+        
+        NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
+            
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == false);
+        
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
         
         NetworkEngine.getInstance().executeOperation(operation);
         
@@ -174,13 +228,13 @@ public class CacheTests extends InstrumentationTestCase {
         
         // Create an new operation
         operation = NetworkEngine.getInstance()
-                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+messages.get(0).getId() +".json");
         
         NetworkEngine.getInstance().executeOperation(operation);
         
-        // Check that we get a 200 response, that is not cached
+        // Check that we get a 200 response, that is cached since Etag hasen't changed
         assertTrue(operation.getHttpStatusCode() == 200);
-        assertTrue(operation.isCachedResponse() == false);
+        assertTrue(operation.isCachedResponse() == true);
     }
     
     public void testUniqueIdentifier() {
@@ -222,6 +276,69 @@ public class CacheTests extends InstrumentationTestCase {
         }
     }
     
+    private Message getMessage(int id) {
+        NetworkOperation operation = NetworkEngine.getInstance()
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        if (operation.getHttpStatusCode() != 200) {
+            return null;
+        }
+        
+        String responseString = operation.getResponseString();
+        
+        try {
+            JSONObject jsonObject = new JSONObject(responseString);
+            
+            return new Message(jsonObject);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+    
+    private Message postMessage(String title, String body) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("message[title]", title);
+        params.put("message[body]", body);
+        
+        NetworkOperation operation = NetworkEngine.getInstance().
+        		createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json", params, HttpMethod.POST);
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        if (operation.getHttpStatusCode() != 201) {
+            return null;
+        }
+        
+        String responseString = operation.getResponseString();
+        
+        try {
+            JSONObject jsonObject = new JSONObject(responseString);
+            
+            return new Message(jsonObject);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+    
+    private boolean putMessage(int id, String title, String body) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("message[title]", title);
+        params.put("message[body]", body);
+        
+        NetworkOperation operation = NetworkEngine.getInstance()
+            .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json", params, HttpMethod.PUT);
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        if (operation.getHttpStatusCode() == 200) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
     private boolean deleteMessage(int id) {
         NetworkOperation operation = NetworkEngine.getInstance()
             .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json", null, HttpMethod.DELETE);
@@ -233,16 +350,5 @@ public class CacheTests extends InstrumentationTestCase {
         } else {
             return false;
         }
-    }
-    
-    private void postMessage(String title, String body) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("message[title]", title);
-        params.put("message[body]", body);
-        
-        NetworkOperation operation = NetworkEngine.getInstance().
-        		createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json", params, HttpMethod.POST);
-        
-        NetworkEngine.getInstance().executeOperation(operation);
     }
 }
