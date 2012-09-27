@@ -18,7 +18,6 @@ package com.sogeti.droidnetworking.external;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A cache that holds strong references to a limited number of values. Each time

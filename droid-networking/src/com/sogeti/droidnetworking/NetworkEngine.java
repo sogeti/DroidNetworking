@@ -26,6 +26,8 @@ import java.util.concurrent.Executors;
 
 import javax.net.ssl.HostnameVerifier;
 
+import org.apache.http.HttpHost;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -125,6 +127,11 @@ public class NetworkEngine {
                 this.headers.put("User-Agent", "Unknown/0.0");
             }
         }
+    }
+
+    public void setProxyServer(final String host, final int port) {
+    	HttpHost proxy = new HttpHost(host, port);
+        httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
     }
 
     public NetworkOperation createOperationWithURLString(final String urlString) {

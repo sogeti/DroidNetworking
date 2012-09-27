@@ -20,6 +20,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -112,7 +113,7 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 304);
     }
     
-    public void testResponseData() {
+    public void testCacheTC1() {
         NetworkEngine.getInstance().clearCache();
         
         NetworkOperation operation = NetworkEngine.getInstance()
@@ -139,6 +140,47 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == true);
         assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));  
+    }
+    
+    public void testCacheTC2() {
+        NetworkEngine.getInstance().clearCache();
+        
+        NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+            
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == false);
+        
+        // Post a new message
+        postMessage("title", "body");
+        
+        // Create an new operation
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // Check that we get a 200 response, that is cached with the same data as before
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == true);
+        
+        try {
+          Thread.sleep(11000L);    // after 10 seconds the cache is no longer valid
+        } catch (Exception e) {
+        	
+        } 
+        
+        // Create an new operation
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json");
+        
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        // Check that we get a 200 response, that is not cached
+        assertTrue(operation.getHttpStatusCode() == 200);
+        assertTrue(operation.isCachedResponse() == false);
     }
     
     public void testUniqueIdentifier() {
@@ -191,5 +233,16 @@ public class CacheTests extends InstrumentationTestCase {
         } else {
             return false;
         }
+    }
+    
+    private void postMessage(String title, String body) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("message[title]", title);
+        params.put("message[body]", body);
+        
+        NetworkOperation operation = NetworkEngine.getInstance().
+        		createOperationWithURLString("http://freezing-winter-7173.heroku.com/posts.json", params, HttpMethod.POST);
+        
+        NetworkEngine.getInstance().executeOperation(operation);
     }
 }
