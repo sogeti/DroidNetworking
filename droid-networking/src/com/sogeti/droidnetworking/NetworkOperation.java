@@ -89,7 +89,7 @@ public class NetworkOperation implements Runnable {
     public interface OperationListener {
         void onCompletion(final NetworkOperation operation);
 
-        void onError();
+        void onError(final NetworkOperation operation);
     }
 
     public interface CacheHandler {
@@ -245,7 +245,7 @@ public class NetworkOperation implements Runnable {
             if (status == STATUS_COMPLETED) {
                 networkOperation.listener.onCompletion(networkOperation);
             } else if (status == STATUS_ERROR) {
-                networkOperation.listener.onError();
+                networkOperation.listener.onError(networkOperation);
             }
         }
     }

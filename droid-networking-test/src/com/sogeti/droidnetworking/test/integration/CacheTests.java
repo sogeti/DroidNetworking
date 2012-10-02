@@ -82,6 +82,8 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(cacheHeaders.get("ETag").equalsIgnoreCase("\"d751713988987e9331980363e24189ce\""));
         
         assertTrue(cacheHeaders.get("Last-Modified") == null);
+        
+        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testNotModified() {
@@ -111,6 +113,8 @@ public class CacheTests extends InstrumentationTestCase {
         
         // The server should respond with 304 Not Modified since we supplied a ETag
         assertTrue(operation.getHttpStatusCode() == 304);
+        
+        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC1() {
@@ -139,7 +143,9 @@ public class CacheTests extends InstrumentationTestCase {
         // Check that we get a 200 response, that is cached with the same data as before
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == true);
-        assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));  
+        assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));
+        
+        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC2() {
@@ -189,10 +195,12 @@ public class CacheTests extends InstrumentationTestCase {
         // Check that we get a 200 response, that is not cached
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == false);
+        
+        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC3() {
-NetworkEngine.getInstance().clearCache();
+    	NetworkEngine.getInstance().clearCache();
         
         // Delete all messages
         for (Message message : getMessages()) {
@@ -235,6 +243,8 @@ NetworkEngine.getInstance().clearCache();
         // Check that we get a 200 response, that is cached since Etag hasen't changed
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == true);
+        
+        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testUniqueIdentifier() {
@@ -276,7 +286,8 @@ NetworkEngine.getInstance().clearCache();
         }
     }
     
-    private Message getMessage(int id) {
+    @SuppressWarnings("unused")
+	private Message getMessage(int id) {
         NetworkOperation operation = NetworkEngine.getInstance()
             .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages/"+id+".json");
         

@@ -45,8 +45,11 @@ import com.sogeti.droidnetworking.external.LruCache;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.util.Log;
 
 public class NetworkEngine {
+	private static final String TAG = "NetworkEngine";
+	
     private static final int HTTP_PORT = 80;
     private static final int HTTPS_PORT = 443;
     private static final int SOCKET_TIMEOUT = 5000;
@@ -245,6 +248,15 @@ public class NetworkEngine {
 
     public void setMemoryCacheSize(int memoryCacheSize) {
     	this.memoryCacheSize = memoryCacheSize;
+    }
+    
+    public void printMemoryCacheStats() {
+    	Log.i(TAG, "********** MemoryCache **********");
+    	Log.i(TAG, "Size: " + memoryCache.size() + " bytes");
+    	Log.i(TAG, "Put count: " + memoryCache.putCount());
+    	Log.i(TAG, "Hit count: " + memoryCache.hitCount());
+    	Log.i(TAG, "Miss count: " + memoryCache.missCount());
+    	Log.i(TAG, "Evicition count: " + memoryCache.evictionCount());
     }
 
     public static class CacheEntry {
