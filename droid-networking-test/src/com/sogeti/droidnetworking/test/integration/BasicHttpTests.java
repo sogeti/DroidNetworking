@@ -105,6 +105,29 @@ public class BasicHttpTests extends InstrumentationTestCase {
         assertTrue(message1.getBody().equalsIgnoreCase(message2.getBody())); 
     }
     
+    // Test error handling
+    public void testGetTC3() {   	
+    	NetworkOperation operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/not-found.json");
+        
+    	assertTrue(operation.getStatus() == NetworkOperation.STATUS_PENDING);
+    	
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getStatus() == NetworkOperation.STATUS_ERROR);
+        assertTrue(operation.getHttpStatusCode() == 404);
+        
+        operation = NetworkEngine.getInstance()
+                .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");
+        
+    	assertTrue(operation.getStatus() == NetworkOperation.STATUS_PENDING);
+    	
+        NetworkEngine.getInstance().executeOperation(operation);
+        
+        assertTrue(operation.getStatus() == NetworkOperation.STATUS_COMPLETED);
+        assertTrue(operation.getHttpStatusCode() == 200);
+    }
+    
     private ArrayList<Message> getMessages() {
         NetworkOperation operation = NetworkEngine.getInstance()
             .createOperationWithURLString("http://freezing-winter-7173.heroku.com/messages.json");

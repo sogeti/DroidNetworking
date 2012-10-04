@@ -34,7 +34,6 @@ import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -54,9 +53,11 @@ import android.os.Handler;
 import android.os.Message;
 
 public class NetworkOperation implements Runnable {
-    private static final int STATUS_COMPLETED = 0;
-    private static final int STATUS_ERROR = 1;
-    private static final int STATUS_CANCELLED = 2;
+    public static final int STATUS_COMPLETED = 0;
+    public static final int STATUS_ERROR = 1;
+    public static final int STATUS_CANCELLED = 2;
+    public static final int STATUS_PENDING = 3;
+    public static final int STATUS_EXECUTING = 4;
 
     private static final String LAST_MODIFIED = "Last-Modified";
     private static final String ETAG = "ETag";
@@ -81,6 +82,7 @@ public class NetworkOperation implements Runnable {
     private byte[] cachedData;
     private CacheHandler cacheHandler;
     private boolean fresh = false;
+    private int status;
 
     public interface ResponseParser {
         void parse(final InputStream is) throws IOException;
@@ -102,6 +104,8 @@ public class NetworkOperation implements Runnable {
         this.params = new HashMap<String, String>();
         this.headers = new HashMap<String, String>();
         this.cacheHeaders = new HashMap<String, String>();
+        
+        status = STATUS_PENDING;
 
         if (useGzip) {
             this.headers.put("Accept-Encoding", "gzip");
@@ -155,6 +159,8 @@ public class NetworkOperation implements Runnable {
     }
 
     public void execute() {
+    	status = STATUS_EXECUTING;
+    	
     	if (!fresh) {
 	        try {
 	            response = NetworkEngine.getInstance().getHttpClient().execute(request);
@@ -199,10 +205,9 @@ public class NetworkOperation implements Runnable {
 	                    entity.consumeContent();
 	                }
 	            }
-	        } catch (ClientProtocolException e) {
-	            e.printStackTrace();
 	        } catch (IOException e) {
-	            e.printStackTrace();
+	            status = STATUS_ERROR;
+	            return;
 	        }
     	}
 
@@ -214,10 +219,19 @@ public class NetworkOperation implements Runnable {
             		InputStream is = new ByteArrayInputStream(cachedData);
             		parser.parse(is);
             	} catch (IOException e) {
-                    e.printStackTrace();
+            		status = STATUS_ERROR;
+    	            return;
                 }
             }
         }
+    	
+    	// Client and server errors
+    	if (httpStatusCode >= 400 && httpStatusCode < 600) {
+    		status = STATUS_ERROR;
+            return;
+    	}
+    	
+    	status = STATUS_COMPLETED;
     }
 
     @Override
@@ -227,7 +241,7 @@ public class NetworkOperation implements Runnable {
         if (Thread.currentThread().isInterrupted()) {
             handler.sendEmptyMessage(STATUS_CANCELLED);
         } else {
-            handler.sendEmptyMessage(STATUS_COMPLETED);
+            handler.sendEmptyMessage(status);
         }
     }
 
@@ -262,6 +276,10 @@ public class NetworkOperation implements Runnable {
 
     public String getResponseString() {
         return getResponseString("UTF-8");
+    }
+    
+    public int getStatus() {
+    	return status;
     }
 
     public String getResponseString(final String encoding) {
