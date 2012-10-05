@@ -19,8 +19,6 @@ package com.sogeti.droidnetworking.test.unit;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 
-import android.util.Log;
-
 import com.sogeti.droidnetworking.external.diskcache.DiskLruCache;
 
 import java.io.BufferedReader;
@@ -46,8 +44,6 @@ public final class DiskLruCacheTest extends TestCase {
 	static final String JOURNAL_FILE = "journal";
     static final String MAGIC = "libcore.io.DiskLruCache";
     static final String VERSION_1 = "1";
-    
-    static final String TAG = "DiskLruCacheTest";
 	
     private final int appVersion = 100;
     private String javaTmpDir;
@@ -59,19 +55,8 @@ public final class DiskLruCacheTest extends TestCase {
     @Override public void setUp() throws Exception {
         super.setUp();
         javaTmpDir = System.getProperty("java.io.tmpdir");
-        
-        if (javaTmpDir != null) {
-        	Log.i(TAG, "javaTmpDir = " + javaTmpDir);
-        } else {
-        	Log.e(TAG, "Could not get javaTmpDir");
-        }
-        
-        try {
-        	cacheDir = new File(javaTmpDir, "DiskLruCacheTest");
-        	cacheDir.mkdir();
-        } catch (Exception e) {
-        	e.printStackTrace();
-        }
+        cacheDir = new File("/data/data/com.sogeti.droidnetworking.test/cache", "DiskLruCacheTest");
+        cacheDir.mkdir();
         
         journalFile = new File(cacheDir, JOURNAL_FILE);
         for (File file : cacheDir.listFiles()) {
