@@ -55,7 +55,7 @@ public final class DiskLruCacheTest extends TestCase {
     @Override public void setUp() throws Exception {
         super.setUp();
         javaTmpDir = System.getProperty("java.io.tmpdir");
-        cacheDir = new File("/data/data/com.sogeti.droidnetworking.test/cache", "DiskLruCacheTest");
+        cacheDir = new File(javaTmpDir, "DiskLruCacheTest");
         cacheDir.mkdir();
         
         journalFile = new File(cacheDir, JOURNAL_FILE);
