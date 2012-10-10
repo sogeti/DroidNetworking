@@ -16,6 +16,14 @@
 
 package com.sogeti.droidnetworking;
 
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -41,21 +49,24 @@ import org.apache.http.params.HttpParams;
 
 import com.sogeti.droidnetworking.NetworkOperation.CacheHandler;
 import com.sogeti.droidnetworking.external.LruCache;
+import com.sogeti.droidnetworking.external.diskcache.Charsets;
+import com.sogeti.droidnetworking.external.diskcache.DiskLruCache;
+import com.sogeti.droidnetworking.external.diskcache.StrictLineReader;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.util.Log;
 
 public class NetworkEngine {
-	private static final String TAG = "NetworkEngine";
-	
     private static final int HTTP_PORT = 80;
     private static final int HTTPS_PORT = 443;
     private static final int SOCKET_TIMEOUT = 5000;
     private static final int CONNECTION_TIMEOUT = 5000;
 
     private static final int DEFAULT_MEMORY_CACHE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final int DEFAULT_DISK_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final int DISK_CACHE_VALUE_COUNT = 2;
+    private static final int DISK_CACHE_VERSION = 1;
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, HEAD
@@ -69,8 +80,10 @@ public class NetworkEngine {
     private DefaultHttpClient httpClient;
 
     private LruCache<String, CacheEntry> memoryCache;
+    private DiskLruCache diskCache;
     private boolean useCache = false;
     private int memoryCacheSize = DEFAULT_MEMORY_CACHE_SIZE;
+    private int diskCacheSize = DEFAULT_DISK_CACHE_SIZE;
 
     public static synchronized NetworkEngine getInstance() {
         if (networkEngine == null) {
@@ -80,22 +93,39 @@ public class NetworkEngine {
         return networkEngine;
     }
 
-    public NetworkEngine() {
-        sharedNetworkQueue = Executors.newFixedThreadPool(2);
-
-        memoryCache = new LruCache<String, CacheEntry>(memoryCacheSize) {
-            protected int sizeOf(final String key, final CacheEntry entry) {
-                return entry.size();
-            }
-        };
-    }
-
     public void init(final Context context) {
         init(context, null);
     }
 
     public void init(final Context context, final Map<String, String> headers) {
         this.context = context;
+
+        // Setup a queue for operations
+        sharedNetworkQueue = Executors.newFixedThreadPool(2);
+
+        // Init the memory cache, if the default memory cache size shouldn't be used, set the
+        // size using setMemoryCacheSize before calling init
+        if (memoryCacheSize > 0) {
+	        memoryCache = new LruCache<String, CacheEntry>(memoryCacheSize) {
+	            protected int sizeOf(final String key, final CacheEntry entry) {
+	                return entry.size();
+	            }
+	        };
+        } else {
+        	memoryCache = null;
+        }
+
+        // Init the disk cache, if the default disk cache size shouldn't be used, set the
+        // size using setDiskCacheSize before calling init
+        if (diskCacheSize > 0) {
+	        try {
+				diskCache = DiskLruCache.open(context.getCacheDir(), DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
+			} catch (IOException e) {
+				diskCache = null;
+			}
+        } else {
+        	diskCache = null;
+        }
 
         // Setup HTTP
         SchemeRegistry schemeRegistry = new SchemeRegistry();
@@ -152,10 +182,26 @@ public class NetworkEngine {
         prepareHeaders(operation);
         operation.setCacheHandler(new CacheHandler() {
             @Override
-            public void cache(final NetworkOperation operation) {               
+            public void cache(final NetworkOperation operation) {
                 CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
 
-                memoryCache.put(operation.getUniqueIdentifier(), entry);
+                if (memoryCache != null) {
+                	memoryCache.put(operation.getUniqueIdentifier(), entry);
+                }
+
+            	if (diskCache != null) {
+            		DiskLruCache.Editor editor = null;
+            		try {
+                		editor = diskCache.edit(operation.getUniqueIdentifier());
+
+                		if (editor != null) {
+                    		entry.writeTo(editor);
+                    		editor.commit();
+                    	}
+            		} catch (IOException e) {
+    					editor = null;
+    				}	
+            	}
             }
         });
 
@@ -170,7 +216,7 @@ public class NetworkEngine {
         enqueueOperation(operation, false);
     }
 
-    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {        
+    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {
     	executeOperation(operation, forceReload, true);
     }
 
@@ -178,16 +224,35 @@ public class NetworkEngine {
         executeOperation(operation, false);
     }
 
-    public void executeOperation(final NetworkOperation operation, final boolean forceReload) {      
+    public void executeOperation(final NetworkOperation operation, final boolean forceReload) {
         executeOperation(operation, forceReload, false);
     }
 
-    private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {      
+    private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {
         long expiryTimeInSeconds = 0;
 
         if (operation.isCachable() && useCache) {
         	if (!forceReload) {
-		        CacheEntry entry = memoryCache.get(operation.getUniqueIdentifier());
+        		CacheEntry entry = null;
+
+        		if (memoryCache != null) {
+        			entry = memoryCache.get(operation.getUniqueIdentifier());
+        		}
+
+		        if (entry == null && diskCache != null) {
+		        	DiskLruCache.Snapshot snapshot = null;
+
+					try {
+						snapshot = diskCache.get(operation.getUniqueIdentifier());
+
+						if (snapshot != null) {
+			        		entry = new CacheEntry(snapshot);
+			        		snapshot.close();
+			        	}
+					} catch (IOException e) {
+						snapshot = null;
+					}
+		        }
 
 		        if (entry != null) {
 		        	operation.setCachedData(entry.getResponseData());
@@ -239,24 +304,30 @@ public class NetworkEngine {
     }
 
     public void clearCache() {
-        memoryCache.evictAll();
+    	if (memoryCache != null) {
+    		memoryCache.evictAll();
+    	}
+
+        if (diskCache != null) {
+        	try {
+				diskCache.delete();
+				diskCache = DiskLruCache.open(context.getCacheDir(), DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
+			} catch (IOException e) {
+				diskCache = null;
+			}
+        }
     }
 
-    public void setUseCache(boolean useCache) {
+    public void setUseCache(final boolean useCache) {
     	this.useCache = useCache;
     }
 
-    public void setMemoryCacheSize(int memoryCacheSize) {
+    public void setMemoryCacheSize(final int memoryCacheSize) {
     	this.memoryCacheSize = memoryCacheSize;
     }
-    
-    public void printMemoryCacheStats() {
-    	Log.i(TAG, "********** MemoryCache **********");
-    	Log.i(TAG, "Size: " + memoryCache.size() + " bytes");
-    	Log.i(TAG, "Put count: " + memoryCache.putCount());
-    	Log.i(TAG, "Hit count: " + memoryCache.hitCount());
-    	Log.i(TAG, "Miss count: " + memoryCache.missCount());
-    	Log.i(TAG, "Evicition count: " + memoryCache.evictionCount());
+
+    public void setDiskCacheSize(final int diskCacheSize) {
+    	this.diskCacheSize = diskCacheSize;
     }
 
     public static class CacheEntry {
@@ -266,6 +337,60 @@ public class NetworkEngine {
         public CacheEntry(final Map<String, String> cacheHeaders, final byte[] responseData) {
             this.cacheHeaders = cacheHeaders;
             this.responseData = responseData;
+        }
+
+        public CacheEntry(final DiskLruCache.Snapshot snapshot) throws IOException {
+        	StrictLineReader reader = new StrictLineReader(snapshot.getInputStream(0), Charsets.US_ASCII);
+
+        	cacheHeaders = new HashMap<String, String>();
+
+			int cacheHeaderCount = reader.readInt();
+
+			for (int i = 0; i < cacheHeaderCount; i++) {
+        		String key = reader.readLine();
+        		String value = reader.readLine();
+        		cacheHeaders.put(key, value);
+            }
+
+        	reader.close();
+
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int read = 0;
+
+            InputStream in = snapshot.getInputStream(1);
+
+            while ((read = in.read(buffer, 0, buffer.length)) != -1) {
+                baos.write(buffer, 0, read);
+            }
+
+            in.close();
+
+            responseData = baos.toByteArray();
+        }
+
+        public void writeTo(final DiskLruCache.Editor editor) throws IOException {
+            OutputStream out = editor.newOutputStream(0);
+            Writer writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.US_ASCII));
+
+            writer.write(Integer.toString(cacheHeaders.size()) + '\n');
+
+            for (String key : cacheHeaders.keySet()) {
+            	writer.write(key + '\n');
+            	writer.write(cacheHeaders.get(key) + '\n');
+            }
+
+            writer.close();
+
+            InputStream in = new ByteArrayInputStream(responseData);
+            byte[] buffer = new byte[1024];
+            int read = 0;
+
+            while ((read = in.read(buffer, 0, buffer.length)) != -1) {
+            	editor.newOutputStream(1).write(buffer, 0, read);
+            }
+
+            in.close();
         }
 
         public Map<String, String> getCacheHeaders() {
@@ -284,7 +409,7 @@ public class NetworkEngine {
             this.responseData = responseData;
         }
 
-        public int size() {
+		public int size() {
             return responseData.length;
         }
     }

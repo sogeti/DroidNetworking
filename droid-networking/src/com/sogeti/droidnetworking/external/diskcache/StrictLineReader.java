@@ -205,14 +205,14 @@ public class StrictLineReader implements Closeable {
      * @throws java.io.IOException for underlying {@code InputStream} errors or conversion error.
      * @throws java.io.EOFException for the end of source stream.
      */
-    //public int readInt() throws IOException {
-    //    String intString = readLine();
-    //    try {
-    //        return Integer.parseInt(intString);
-    //    } catch (NumberFormatException e) {
-    //        throw new IOException("expected an int but was \"" + intString + "\"");
-    //    }
-    //}
+     public int readInt() throws IOException {
+     	String intString = readLine();
+    	try {
+    		return Integer.parseInt(intString);
+    	} catch (NumberFormatException e) {
+    		throw new IOException("expected an int but was \"" + intString + "\"");
+    	}
+     }
 
     /**
      * Check whether there was an unterminated line at end of input after the line reader reported

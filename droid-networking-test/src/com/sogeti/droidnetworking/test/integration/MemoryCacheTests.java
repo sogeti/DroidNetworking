@@ -34,13 +34,15 @@ import com.sogeti.droidnetworking.test.entities.Message;
 
 import android.test.InstrumentationTestCase;
 
-public class CacheTests extends InstrumentationTestCase {
-    public CacheTests() {
+public class MemoryCacheTests extends InstrumentationTestCase {
+    public MemoryCacheTests() {
         super();
     }
     
     @Override
     public void setUp() {
+    	NetworkEngine.getInstance().setDiskCacheSize(0);
+    	NetworkEngine.getInstance().setMemoryCacheSize(1024);
         NetworkEngine.getInstance().init(getInstrumentation().getContext());
         NetworkEngine.getInstance().setUseCache(true);
         
@@ -52,7 +54,7 @@ public class CacheTests extends InstrumentationTestCase {
     
     @Override
     public void tearDown() {
-        
+        NetworkEngine.getInstance().clearCache();
     }
     
     public void testCacheHeaders() {
@@ -82,8 +84,6 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(cacheHeaders.get("ETag").equalsIgnoreCase("\"d751713988987e9331980363e24189ce\""));
         
         assertTrue(cacheHeaders.get("Last-Modified") == null);
-        
-        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testNotModified() {
@@ -113,8 +113,6 @@ public class CacheTests extends InstrumentationTestCase {
         
         // The server should respond with 304 Not Modified since we supplied a ETag
         assertTrue(operation.getHttpStatusCode() == 304);
-        
-        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC1() {
@@ -144,8 +142,6 @@ public class CacheTests extends InstrumentationTestCase {
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == true);
         assertTrue(operation.getResponseString().equalsIgnoreCase("[]"));
-        
-        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC2() {
@@ -195,8 +191,6 @@ public class CacheTests extends InstrumentationTestCase {
         // Check that we get a 200 response, that is not cached
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == false);
-        
-        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testCacheTC3() {
@@ -243,8 +237,6 @@ public class CacheTests extends InstrumentationTestCase {
         // Check that we get a 200 response, that is cached since Etag hasen't changed
         assertTrue(operation.getHttpStatusCode() == 200);
         assertTrue(operation.isCachedResponse() == true);
-        
-        NetworkEngine.getInstance().printMemoryCacheStats();
     }
     
     public void testUniqueIdentifier() {
