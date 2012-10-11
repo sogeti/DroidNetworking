@@ -67,6 +67,8 @@ public class NetworkEngine {
     private static final int DEFAULT_DISK_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
     private static final int DISK_CACHE_VALUE_COUNT = 2;
     private static final int DISK_CACHE_VERSION = 1;
+    private static final int DISK_CACHE_ENTRY_METADATA = 0;
+    private static final int DISK_CACHE_ENTRY_BODY = 1;
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, HEAD
@@ -106,7 +108,7 @@ public class NetworkEngine {
         // Init the memory cache, if the default memory cache size shouldn't be used, set the
         // size using setMemoryCacheSize before calling init
         if (memoryCacheSize > 0) {
-	        memoryCache = new LruCache<String, CacheEntry>(memoryCacheSize) {
+        	memoryCache = new LruCache<String, CacheEntry>(memoryCacheSize) {
 	            protected int sizeOf(final String key, final CacheEntry entry) {
 	                return entry.size();
 	            }
@@ -119,7 +121,8 @@ public class NetworkEngine {
         // size using setDiskCacheSize before calling init
         if (diskCacheSize > 0) {
 	        try {
-				diskCache = DiskLruCache.open(context.getCacheDir(), DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
+				diskCache = DiskLruCache.open(context.getCacheDir(),
+						DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
 			} catch (IOException e) {
 				diskCache = null;
 			}
@@ -200,7 +203,7 @@ public class NetworkEngine {
                     	}
             		} catch (IOException e) {
     					editor = null;
-    				}	
+            		}
             	}
             }
         });
@@ -311,7 +314,8 @@ public class NetworkEngine {
         if (diskCache != null) {
         	try {
 				diskCache.delete();
-				diskCache = DiskLruCache.open(context.getCacheDir(), DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
+				diskCache = DiskLruCache.open(context.getCacheDir(),
+						DISK_CACHE_VERSION, DISK_CACHE_VALUE_COUNT, diskCacheSize);
 			} catch (IOException e) {
 				diskCache = null;
 			}
@@ -340,7 +344,8 @@ public class NetworkEngine {
         }
 
         public CacheEntry(final DiskLruCache.Snapshot snapshot) throws IOException {
-        	StrictLineReader reader = new StrictLineReader(snapshot.getInputStream(0), Charsets.US_ASCII);
+        	StrictLineReader reader = new StrictLineReader(snapshot.getInputStream(DISK_CACHE_ENTRY_METADATA),
+        			Charsets.US_ASCII);
 
         	cacheHeaders = new HashMap<String, String>();
 
@@ -358,7 +363,7 @@ public class NetworkEngine {
             byte[] buffer = new byte[1024];
             int read = 0;
 
-            InputStream in = snapshot.getInputStream(1);
+            InputStream in = snapshot.getInputStream(DISK_CACHE_ENTRY_BODY);
 
             while ((read = in.read(buffer, 0, buffer.length)) != -1) {
                 baos.write(buffer, 0, read);
@@ -370,7 +375,7 @@ public class NetworkEngine {
         }
 
         public void writeTo(final DiskLruCache.Editor editor) throws IOException {
-            OutputStream out = editor.newOutputStream(0);
+            OutputStream out = editor.newOutputStream(DISK_CACHE_ENTRY_METADATA);
             Writer writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.US_ASCII));
 
             writer.write(Integer.toString(cacheHeaders.size()) + '\n');
@@ -386,10 +391,13 @@ public class NetworkEngine {
             byte[] buffer = new byte[1024];
             int read = 0;
 
+            out = editor.newOutputStream(DISK_CACHE_ENTRY_BODY);
+
             while ((read = in.read(buffer, 0, buffer.length)) != -1) {
-            	editor.newOutputStream(1).write(buffer, 0, read);
+            	out.write(buffer, 0, read);
             }
 
+            out.close();
             in.close();
         }
 

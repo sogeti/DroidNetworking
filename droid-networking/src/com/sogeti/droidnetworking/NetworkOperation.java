@@ -104,7 +104,7 @@ public class NetworkOperation implements Runnable {
         this.params = new HashMap<String, String>();
         this.headers = new HashMap<String, String>();
         this.cacheHeaders = new HashMap<String, String>();
-        
+
         status = STATUS_PENDING;
 
         if (useGzip) {
@@ -160,7 +160,7 @@ public class NetworkOperation implements Runnable {
 
     public void execute() {
     	status = STATUS_EXECUTING;
-    	
+
     	if (!fresh) {
 	        try {
 	            response = NetworkEngine.getInstance().getHttpClient().execute(request);
@@ -207,7 +207,7 @@ public class NetworkOperation implements Runnable {
 	            }
 	        } catch (IOException e) {
 	            status = STATUS_ERROR;
-	            return;
+	            return; // Possibly don't return and continue
 	        }
     	}
 
@@ -224,13 +224,13 @@ public class NetworkOperation implements Runnable {
                 }
             }
         }
-    	
+
     	// Client and server errors
     	if (httpStatusCode >= 400 && httpStatusCode < 600) {
     		status = STATUS_ERROR;
             return;
     	}
-    	
+
     	status = STATUS_COMPLETED;
     }
 
@@ -277,7 +277,7 @@ public class NetworkOperation implements Runnable {
     public String getResponseString() {
         return getResponseString("UTF-8");
     }
-    
+
     public int getStatus() {
     	return status;
     }
