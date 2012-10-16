@@ -98,6 +98,10 @@ public class NetworkOperation implements Runnable {
         void cache(final NetworkOperation operation);
     }
 
+    public NetworkOperation() {
+        this(null, null, null);
+    }
+
     public NetworkOperation(final String urlString, final Map<String, String> params, final HttpMethod httpMethod) {
         this.urlString = urlString;
         this.httpMethod = httpMethod;
@@ -107,12 +111,14 @@ public class NetworkOperation implements Runnable {
 
         status = STATUS_PENDING;
 
-        if (useGzip) {
-            this.headers.put("Accept-Encoding", "gzip");
-        }
-
         if (params != null) {
             this.params.putAll(params);
+        }
+    }
+
+    private int prepareRequest() {
+        if (urlString == null || httpMethod == null) {
+            return -1;
         }
 
         switch (httpMethod) {
@@ -153,63 +159,74 @@ public class NetworkOperation implements Runnable {
             }
         }
 
+        if (useGzip) {
+            this.headers.put("Accept-Encoding", "gzip");
+        }
+
         for (String header : headers.keySet()) {
             request.addHeader(header, headers.get(header));
         }
+
+        return 0;
     }
 
     public void execute() {
-    	status = STATUS_EXECUTING;
+        if (prepareRequest() != 0) {
+            status = STATUS_ERROR;
+            return;
+        }
 
-    	if (!fresh) {
-	        try {
-	            response = NetworkEngine.getInstance().getHttpClient().execute(request);
+        status = STATUS_EXECUTING;
 
-	            setCacheHeaders(response);
+        if (!fresh) {
+            try {
+                response = NetworkEngine.getInstance().getHttpClient().execute(request);
 
-	            httpStatusCode = response.getStatusLine().getStatusCode();
+                setCacheHeaders(response);
 
-	            if (response.getEntity() != null) {
-	                HttpEntity entity = getDecompressingEntity(response.getEntity());
+                httpStatusCode = response.getStatusLine().getStatusCode();
 
-	                InputStream is = entity.getContent();
+                if (response.getEntity() != null) {
+                    HttpEntity entity = getDecompressingEntity(response.getEntity());
 
-	                if (parser != null) {
-	                    CachingInputStream cis = new CachingInputStream(is);
-	                    parser.parse(cis);
+                    InputStream is = entity.getContent();
 
-	                    responseData = cis.getCache();
+                    if (parser != null) {
+                        CachingInputStream cis = new CachingInputStream(is);
+                        parser.parse(cis);
 
-	                    cis.close();
-	                } else {
-	                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	                    byte[] buffer = new byte[1024];
-	                    int read = 0;
+                        responseData = cis.getCache();
 
-	                    while ((read = is.read(buffer, 0, buffer.length)) != -1) {
-	                        baos.write(buffer, 0, read);
-	                    }
+                        cis.close();
+                    } else {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[1024];
+                        int read = 0;
 
-	                    responseData = baos.toByteArray();
-	                }
+                        while ((read = is.read(buffer, 0, buffer.length)) != -1) {
+                            baos.write(buffer, 0, read);
+                        }
 
-	                if (httpStatusCode >= 200 && httpStatusCode < 300 && isCachable()) {
-	                    cachedData = null;
+                        responseData = baos.toByteArray();
+                    }
 
-	                    if (cacheHandler != null) {
-	                        cacheHandler.cache(this);
-	                    }
-	                }
+                    if (httpStatusCode >= 200 && httpStatusCode < 300 && isCachable()) {
+                        cachedData = null;
 
-	                if (entity != null) {
-	                    entity.consumeContent();
-	                }
-	            }
-	        } catch (IOException e) {
-	            status = STATUS_ERROR;
-	            return; // Possibly don't return and continue
-	        }
-    	}
+                        if (cacheHandler != null) {
+                            cacheHandler.cache(this);
+                        }
+                        }
+
+                    if (entity != null) {
+                        entity.consumeContent();
+                    }
+                }
+            } catch (IOException e) {
+                status = STATUS_ERROR;
+                return; // Possibly don't return and continue
+            }
+        }
 
     	if (cachedData != null) {
     		httpStatusCode = 200;
@@ -282,6 +299,22 @@ public class NetworkOperation implements Runnable {
     	return status;
     }
 
+    public String getUrlString() {
+        return urlString;
+    }
+
+    public void setUrlString(final String urlString) {
+        this.urlString = urlString;
+    }
+
+    public HttpMethod getHttpMethod() {
+        return httpMethod;
+    }
+
+    public void setHttpMethod(final HttpMethod httpMethod) {
+        this.httpMethod = httpMethod;
+    }
+
     public String getResponseString(final String encoding) {
         try {
             return new String(getResponseData(), encoding);
@@ -295,7 +328,7 @@ public class NetworkOperation implements Runnable {
     }
 
     public void addParams(final Map<String, String> params) {
-        params.putAll(params);
+        this.params.putAll(params);
     }
 
     public void addHeaders(final Map<String, String> headers) {
@@ -452,11 +485,11 @@ public class NetworkOperation implements Runnable {
         String eTag = cacheHeaders.get(ETAG);
 
         if (lastModified != null) {
-            request.addHeader("IF-MODIFIED-SINCE", lastModified);
+            headers.put("IF-MODIFIED-SINCE", lastModified);
         }
 
         if (eTag != null) {
-            request.addHeader("IF-NONE-MATCH", eTag);
+            headers.put("IF-NONE-MATCH", eTag);
         }
     }
 
@@ -482,7 +515,7 @@ public class NetworkOperation implements Runnable {
 
         try {
             String authStrEncoded = Base64.encode(authStr.getBytes("UTF-8"));
-            request.addHeader("Authorization", "Basic " + authStrEncoded);
+            headers.put("Authorization", "Basic " + authStrEncoded);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
