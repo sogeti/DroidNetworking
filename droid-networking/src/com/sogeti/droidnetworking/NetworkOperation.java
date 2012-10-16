@@ -271,8 +271,10 @@ public class NetworkOperation implements Runnable {
 
         @Override
         public void handleMessage(final Message message) {
-            int status = message.arg1;
-
+            super.handleMessage(message);
+            
+            int status = message.what;
+            
             if (status == STATUS_COMPLETED) {
                 networkOperation.listener.onCompletion(networkOperation);
             } else if (status == STATUS_ERROR) {
