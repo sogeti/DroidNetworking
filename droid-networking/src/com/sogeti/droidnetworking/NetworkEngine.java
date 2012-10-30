@@ -184,32 +184,6 @@ public class NetworkEngine {
             final HttpMethod httpMethod) {
         NetworkOperation operation = new NetworkOperation(urlString, params, httpMethod);
 
-        prepareHeaders(operation);
-        operation.setCacheHandler(new CacheHandler() {
-            @Override
-            public void cache(final NetworkOperation operation) {
-                CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
-
-                if (memoryCache != null) {
-                	memoryCache.put(operation.getUniqueIdentifier(), entry);
-                }
-
-            	if (diskCache != null) {
-            		DiskLruCache.Editor editor = null;
-            		try {
-                		editor = diskCache.edit(operation.getUniqueIdentifier());
-
-                		if (editor != null) {
-                    		entry.writeTo(editor);
-                    		editor.commit();
-                    	}
-            		} catch (IOException e) {
-    					editor = null;
-            		}
-            	}
-            }
-        });
-
         return operation;
     }
 
@@ -235,6 +209,33 @@ public class NetworkEngine {
 
     private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {
         long expiryTimeInSeconds = 0;
+        
+        prepareHeaders(operation);
+        
+        operation.setCacheHandler(new CacheHandler() {
+            @Override
+            public void cache(final NetworkOperation operation) {
+                CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
+
+                if (memoryCache != null) {
+                    memoryCache.put(operation.getUniqueIdentifier(), entry);
+                }
+
+                if (diskCache != null) {
+                    DiskLruCache.Editor editor = null;
+                    try {
+                        editor = diskCache.edit(operation.getUniqueIdentifier());
+
+                        if (editor != null) {
+                            entry.writeTo(editor);
+                            editor.commit();
+                        }
+                    } catch (IOException e) {
+                        editor = null;
+                    }
+                }
+            }
+        });
 
         if (operation.isCachable() && useCache) {
         	if (!forceReload) {
