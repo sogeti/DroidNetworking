@@ -215,6 +215,10 @@ public class NetworkEngine {
         operation.setCacheHandler(new CacheHandler() {
             @Override
             public void cache(final NetworkOperation operation) {
+                if (operation.getCacheHeaders().get("Expires") == null) {
+                    return;
+                }
+                
                 CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
 
                 if (memoryCache != null) {
