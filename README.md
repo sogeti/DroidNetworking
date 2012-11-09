@@ -1,45 +1,26 @@
 DroidNetworking
 ===============
 
-A networking library for Android that is built on top of the [HttpClient](http://developer.android.com/reference/org/apache/http/client/HttpClient.html).
+Most Android apps need to use HTTP to send and receive data. There are many options for network communication in Android. Google recommends using the Apache Http Client for Eclair (2.1) and Froyo (2.2). For Gingerbread (2.3) and newer the HttpURLConnection is recommended. However response caching was not introduced in the HttpURLConnection until Ice Cream Sandwich (4.0) was released. 
+
+DroidNetworking is a network library built on top of the [Apache Http Client](http://developer.android.com/reference/org/apache/http/client/HttpClient.html). It has support for response caching, authentication, HTTP and HTTPS and many other features. Best of all, DroidNetworking can be used on Eclair (2.1) and newer. It has a simple API which reduces the amount of code needed for network communication.
 
 Features
 --------
+- HTTP and HTTPS
 - Compatible with **Android 2.1**  (API level 7) and later
 - Make **asynchronous** or **synchronous** HTTP requests
 - GET, POST, PUT, DELETE and HEAD requests supported
-- Get the response as a **string** or **input stream**
+- Get the response as a **string**, **byte array** or **input stream**
 - HTTP requests happens in **a background thread**
 - Requests use a **threadpool** to limit concurrent resource usage
 - Automatic **gzip** response decoding support
 - Supports **Basic Authentication**
-- HTTP **cache**
+- HTTP **response cache**
 
 Usage
 --------
-A simple synchronous GET request. Start by initializing the NetworkEngine:
-
-``NetworkEngine.getInstance().init(this)``
-
-Create a NetworkOperation with an URL string:
-
-``NetworkOperation operation = NetworkEngine.getInstance().createOperationWithURLString("http://www.github.com");``
- 
-Execute the operation synchronously:
-
-``NetworkEngine.getInstance().executeOperation(operation);``
-
-Get the status code from the operation:
-
-``operation.getHttpStatusCode();``
-
-Get the response string from the operation:
-
-``operation.getResponseString();``
-
-More examples
---------
-Check out the test cases for more examples how to use the DroidNetworking library.
+See the following blog post for examples on how to use DroidNetworking: [Introducing DroidNetworking - A network library for Android](http://www.martindahl.se/2012/11/introducing-droidnetworking-network.html)
 
 License
 --------
