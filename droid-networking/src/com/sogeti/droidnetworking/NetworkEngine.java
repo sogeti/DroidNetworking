@@ -58,8 +58,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 
 public class NetworkEngine {
-    private static final int HTTP_PORT = 80;
-    private static final int HTTPS_PORT = 443;
+    private static final int DEFAULT_HTTP_PORT = 80;
+    private static final int DEFAULT_HTTPS_PORT = 443;
     private static final int DEFAULT_SOCKET_TIMEOUT = 5000;
     private static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
@@ -82,6 +82,8 @@ public class NetworkEngine {
     private DefaultHttpClient httpClient;
     private int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
     private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private int httpPort = DEFAULT_HTTP_PORT;
+    private int httpsPort = DEFAULT_HTTPS_PORT;
 
     private LruCache<String, CacheEntry> memoryCache;
     private DiskLruCache diskCache;
@@ -134,13 +136,13 @@ public class NetworkEngine {
 
         // Setup HTTP
         SchemeRegistry schemeRegistry = new SchemeRegistry();
-        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), HTTP_PORT));
+        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), httpPort));
 
         // Setup HTTPS (accept all certificates)
         HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
         SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
         socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
-        schemeRegistry.register(new Scheme("https", socketFactory, HTTPS_PORT));
+        schemeRegistry.register(new Scheme("https", socketFactory, httpsPort));
 
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, connectionTimeout);
@@ -209,16 +211,16 @@ public class NetworkEngine {
 
     private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {
         long expiryTimeInSeconds = 0;
-        
+
         prepareHeaders(operation);
-        
+
         operation.setCacheHandler(new CacheHandler() {
             @Override
             public void cache(final NetworkOperation operation) {
                 if (operation.getCacheHeaders().get("Expires") == null) {
                     return;
                 }
-                
+
                 CacheEntry entry = new CacheEntry(operation.getCacheHeaders(), operation.getResponseData());
 
                 if (memoryCache != null) {
@@ -340,13 +342,21 @@ public class NetworkEngine {
     public void setDiskCacheSize(final int diskCacheSize) {
     	this.diskCacheSize = diskCacheSize;
     }
-    
+
     public void setConnectionTimeout(final int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
-    
+
     public void setSocketTimeout(final int socketTimeout) {
         this.socketTimeout = socketTimeout;
+    }
+
+    public void setHttpPort(final int httpPort) {
+        this.httpPort = httpPort;
+    }
+
+    public void setHttpsPort(final int httpsPort) {
+        this.httpsPort = httpsPort;
     }
 
     public static class CacheEntry {
