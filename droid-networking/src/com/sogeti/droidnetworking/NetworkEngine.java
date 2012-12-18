@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.HostnameVerifier;
 
@@ -193,12 +194,12 @@ public class NetworkEngine {
         operation.addHeaders(headers);
     }
 
-    public void enqueueOperation(final NetworkOperation operation) {
-        enqueueOperation(operation, false);
+    public Future<?> enqueueOperation(final NetworkOperation operation) {
+        return enqueueOperation(operation, false);
     }
 
-    public void enqueueOperation(final NetworkOperation operation, final boolean forceReload) {
-    	executeOperation(operation, forceReload, true);
+    public Future<?> enqueueOperation(final NetworkOperation operation, final boolean forceReload) {
+    	return executeOperation(operation, forceReload, true);
     }
 
     public void executeOperation(final NetworkOperation operation) {
@@ -209,7 +210,7 @@ public class NetworkEngine {
         executeOperation(operation, forceReload, false);
     }
 
-    private void executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {
+    private Future<?> executeOperation(final NetworkOperation operation, final boolean forceReload, final boolean enqueue) {
         long expiryTimeInSeconds = 0;
 
         prepareHeaders(operation);
@@ -271,11 +272,11 @@ public class NetworkEngine {
 
 		        	if (entry.getCacheHeaders() != null) {
 		        		SimpleDateFormat simpleDateFormat
-		        			= new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+		        			= new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z"); 
 		        		String expiresOn = entry.getCacheHeaders().get("Expires");
 
 		        		try {
-			                Date expiresOnDate = simpleDateFormat.parse(expiresOn);
+			                Date expiresOnDate = simpleDateFormat.parse(expiresOn.replaceAll("\\p{Cntrl}", ""));
 			                Date now = new Date();
 			                expiryTimeInSeconds = expiresOnDate.getTime() - now.getTime();
 			            } catch (ParseException e) {
@@ -289,7 +290,7 @@ public class NetworkEngine {
 
         	if (expiryTimeInSeconds <= 0 || forceReload) {
         		if (enqueue) {
-        			sharedNetworkQueue.submit(operation);
+        			return sharedNetworkQueue.submit(operation);
         		} else {
         			operation.execute();
         		}
@@ -297,18 +298,19 @@ public class NetworkEngine {
         		operation.setFresh(true); // Cache is fresh enough
 
         		if (enqueue) {
-        			sharedNetworkQueue.submit(operation);
+        			return sharedNetworkQueue.submit(operation);
         		} else {
-        			operation.execute();
         		}
         	}
         } else {
         	if (enqueue) {
-    			sharedNetworkQueue.submit(operation);
+    			return sharedNetworkQueue.submit(operation);
     		} else {
     			operation.execute();
     		}
         }
+        
+        return null;
     }
 
     public DefaultHttpClient getHttpClient() {
