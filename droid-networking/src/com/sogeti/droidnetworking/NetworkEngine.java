@@ -300,6 +300,7 @@ public class NetworkEngine {
         		if (enqueue) {
         			return sharedNetworkQueue.submit(operation);
         		} else {
+        		    operation.execute();
         		}
         	}
         } else {

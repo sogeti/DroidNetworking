@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +42,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -58,6 +60,7 @@ public class NetworkOperation implements Runnable {
     public static final int STATUS_CANCELLED = 2;
     public static final int STATUS_PENDING = 3;
     public static final int STATUS_EXECUTING = 4;
+    public static final int STATUS_TIMEOUT = 5;
 
     private static final String LAST_MODIFIED = "Last-Modified";
     private static final String ETAG = "ETag";
@@ -222,9 +225,15 @@ public class NetworkOperation implements Runnable {
                         entity.consumeContent();
                     }
                 }
+            } catch (ConnectTimeoutException e) {
+                status = STATUS_TIMEOUT;
+                return;
+            } catch (SocketTimeoutException e) {
+                status = STATUS_TIMEOUT;
+                return;
             } catch (IOException e) {
                 status = STATUS_ERROR;
-                return; // Possibly don't return and continue
+                return;
             }
         }
 
@@ -277,7 +286,7 @@ public class NetworkOperation implements Runnable {
             
             if (status == STATUS_COMPLETED) {
                 networkOperation.listener.onCompletion(networkOperation);
-            } else if (status == STATUS_ERROR) {
+            } else {
                 networkOperation.listener.onError(networkOperation);
             }
         }
