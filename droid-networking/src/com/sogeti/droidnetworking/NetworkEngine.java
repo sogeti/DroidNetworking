@@ -28,6 +28,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -272,7 +273,7 @@ public class NetworkEngine {
 
 		        	if (entry.getCacheHeaders() != null) {
 		        		SimpleDateFormat simpleDateFormat
-		        			= new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z"); 
+		        			= new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US); 
 		        		String expiresOn = entry.getCacheHeaders().get("Expires");
 
 		        		try {
