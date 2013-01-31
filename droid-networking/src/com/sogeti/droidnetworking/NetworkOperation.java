@@ -89,7 +89,7 @@ public class NetworkOperation implements Runnable {
     private int status;
 
     public interface ResponseParser {
-        void parse(final InputStream is) throws IOException;
+        void parse(final InputStream is, final long size) throws IOException;
     }
 
     public interface OperationListener {
@@ -197,7 +197,7 @@ public class NetworkOperation implements Runnable {
 
                     if (parser != null) {
                         CachingInputStream cis = new CachingInputStream(is);
-                        parser.parse(cis);
+                        parser.parse(cis, entity.getContentLength());
 
                         responseData = cis.getCache();
 
@@ -244,7 +244,7 @@ public class NetworkOperation implements Runnable {
             if (parser != null) {
             	try {
             		InputStream is = new ByteArrayInputStream(cachedData);
-            		parser.parse(is);
+            		parser.parse(is, cachedData.length);
             	} catch (IOException e) {
             		status = STATUS_ERROR;
     	            return;
