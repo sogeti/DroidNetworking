@@ -220,7 +220,7 @@ public class NetworkOperation implements Runnable {
                         if (cacheHandler != null) {
                             cacheHandler.cache(this);
                         }
-                        }
+                    }
 
                     if (entity != null) {
                         entity.consumeContent();
@@ -237,6 +237,13 @@ public class NetworkOperation implements Runnable {
                 return;
             }
         }
+        
+        // Client and server errors
+        if (httpStatusCode >= 400 && httpStatusCode < 600) {
+            cachedData = null;
+            status = STATUS_ERROR;
+            return;
+        }
 
     	if (cachedData != null) {
     		httpStatusCode = 200;
@@ -251,13 +258,7 @@ public class NetworkOperation implements Runnable {
                 }
             }
         }
-
-    	// Client and server errors
-    	if (httpStatusCode >= 400 && httpStatusCode < 600) {
-    		status = STATUS_ERROR;
-            return;
-    	}
-
+    	
     	status = STATUS_COMPLETED;
     }
 
