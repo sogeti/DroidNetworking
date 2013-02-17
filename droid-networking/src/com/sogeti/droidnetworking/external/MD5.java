@@ -12,8 +12,7 @@ public final class MD5 {
     public static String encodeString(final String s) {
         try {
             // Create MD5 Hash
-            MessageDigest digest = java.security.MessageDigest
-                    .getInstance("MD5");
+            MessageDigest digest = MessageDigest.getInstance("MD5");
             digest.update(s.getBytes());
             byte[] messageDigest = digest.digest();
 
@@ -21,14 +20,12 @@ public final class MD5 {
             StringBuffer hexString = new StringBuffer();
 
             for (int i = 0; i < messageDigest.length; i++) {
-                hexString.append(Integer.toHexString(BIT_MASK & messageDigest[i]));
+            	hexString.append(Integer.toString((messageDigest[i] & BIT_MASK) + 0x100, 16).substring(1));
             }
 
             return hexString.toString();
-
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+           return null;
         }
-        return "";
     }
 }
