@@ -335,6 +335,17 @@ public class NetworkOperation implements Runnable {
             return null;
         }
     }
+    
+    public Map<String, String> getResponseHeaders() {
+        Map<String, String> headers = new HashMap<String, String>();
+        for (Header header : response.getAllHeaders()) {
+            String key = header.getName();    		
+            if (key != null && key.length() > 0) {
+                headers.put(key, header.getValue());
+            }
+        }
+        return headers;
+    }
 
     public HttpUriRequest getRequest() {
         return request;
