@@ -127,18 +127,17 @@ public class NetworkOperation implements Runnable {
         }
         
         if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.HEAD) {
-			if (!urlString.endsWith("?") && params.size() > 0) {
-				urlString += "?";
-			}
-			
-			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-			for (String param : params.keySet()) {
-				nameValuePairs.add(new BasicNameValuePair(param, params.get(param)));
-			}
-			
-			String paramString = URLEncodedUtils.format(nameValuePairs, "utf-8");
-			urlString += paramString;
-		}
+        	if (!urlString.endsWith("?") && params.size() > 0)
+        		urlString += "?";
+        	
+        	List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+        	for (String param : params.keySet()) {
+        		nameValuePairs.add(new BasicNameValuePair(param, params.get(param)));
+        	}
+        	
+        	String paramString = URLEncodedUtils.format(nameValuePairs, "utf-8");
+        	urlString += paramString;
+        }
         
         switch (httpMethod) {
             case GET :
