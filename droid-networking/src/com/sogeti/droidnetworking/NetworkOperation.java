@@ -43,6 +43,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.message.BasicNameValuePair;
@@ -124,7 +125,7 @@ public class NetworkOperation implements Runnable {
         if (urlString == null || httpMethod == null) {
             return -1;
         }
-
+	
         switch (httpMethod) {
             case GET :
                 request = new HttpGet(urlString);
@@ -161,6 +162,20 @@ public class NetworkOperation implements Runnable {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
+        } else if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.HEAD) {
+            if (!urlString.endsWith("?") && params.size() > 0) {
+                urlString += "?";
+            }
+
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+            
+            for (String param : params.keySet()) {
+                nameValuePairs.add(new BasicNameValuePair(param, params.get(param)));
+            }
+            
+            String paramString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+            
+            urlString += paramString;
         }
 
         if (useGzip) {
