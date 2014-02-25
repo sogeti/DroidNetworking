@@ -125,6 +125,22 @@ public class NetworkOperation implements Runnable {
         if (urlString == null || httpMethod == null) {
             return -1;
         }
+        
+        if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.HEAD) {
+            if (!urlString.endsWith("?") && params.size() > 0) {
+                urlString += "?";
+            }
+
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+            
+            for (String param : params.keySet()) {
+                nameValuePairs.add(new BasicNameValuePair(param, params.get(param)));
+            }
+            
+            String paramString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+            
+            urlString += paramString;
+        }
 	
         switch (httpMethod) {
             case GET :
@@ -162,20 +178,6 @@ public class NetworkOperation implements Runnable {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-        } else if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.HEAD) {
-            if (!urlString.endsWith("?") && params.size() > 0) {
-                urlString += "?";
-            }
-
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-            
-            for (String param : params.keySet()) {
-                nameValuePairs.add(new BasicNameValuePair(param, params.get(param)));
-            }
-            
-            String paramString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
-            
-            urlString += paramString;
         }
 
         if (useGzip) {
