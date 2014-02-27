@@ -22,6 +22,10 @@ Usage
 --------
 See the following blog post for examples on how to use DroidNetworking: [Introducing DroidNetworking - A network library for Android](http://www.martindahl.se/2012/11/introducing-droidnetworking-network.html)
 
+Build
+--------
+DroidNetworking is now using Gradle. If you have Android Studio or Gradle installed on your computer you can type ./gradlew makeJar to build DroidNetworking and create a jar. The jar can be found in droid-networking/build/libs. The latest jar can also be downloaded [here](https://s3.amazonaws.com/droid-networking/droid-networking-20140227.jar)
+
 License
 --------
 Apache License, Version 2.0
