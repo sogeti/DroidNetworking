@@ -1,10 +1,5 @@
-gen
-bin
-.classpath
-.metadata
-.project
-.DS_Store
-default.properties
-/.settings/
-/proguard/
+.gradle
 local.properties
+/.idea
+.DS_Store
+*.iml

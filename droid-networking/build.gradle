@@ -1,0 +1,64 @@
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+
+Calendar calendar = Calendar.getInstance();
+DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+buildID = dateFormat.format(calendar.getTime())
+
+apply plugin: 'android-library'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.0.1"
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    release {
+        runProguard false
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+    }
+}
+
+sourceSets {
+    unitTest {
+        java.srcDir file('src/test/java')
+        resources.srcDir file('src/test/res')
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom runtime
+    unitTestRuntime.extendsFrom unitTestCompile
+}
+
+dependencies {
+    unitTestCompile files("$project.buildDir/classes/release")
+    unitTestCompile 'junit:junit:4.10'
+    unitTestCompile 'org.robolectric:robolectric:2.1.+'
+    unitTestCompile 'com.google.android:android:4.0.1.2'
+    unitTestCompile 'org.apache.commons:commons-io:1.3.2'
+    unitTestCompile 'com.google.mockwebserver:mockwebserver:20130706'
+}
+
+task unitTest(type:Test, dependsOn: assemble) {
+    testClassesDir = project.sourceSets.unitTest.output.classesDir
+    classpath = project.sourceSets.unitTest.runtimeClasspath
+}
+check.dependsOn unitTest
+
+task clearJar(type: Delete) {
+    delete 'build/libs/droid-networking-*.jar'
+}
+
+task makeJar(type: Copy) {
+    from('build/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename ('classes.jar', "droid-networking-${buildID}.jar")
+}
+
+makeJar.dependsOn(clearJar, build)
