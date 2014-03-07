@@ -504,8 +504,10 @@ public class NetworkOperation implements Runnable {
                 }
             }
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            expiresOn = simpleDateFormat.format(expiresOnDate);
+            if (expiresOnDate != null) {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+                expiresOn = simpleDateFormat.format(expiresOnDate);
+            }
         }
 
         if (lastModified != null) {
