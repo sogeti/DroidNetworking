@@ -18,6 +18,9 @@ package com.sogeti.droidnetworking;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -45,6 +48,8 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -52,9 +57,12 @@ import com.sogeti.droidnetworking.NetworkEngine.HttpMethod;
 import com.sogeti.droidnetworking.external.Base64;
 import com.sogeti.droidnetworking.external.CachingInputStream;
 import com.sogeti.droidnetworking.external.MD5;
+import com.sogeti.droidnetworking.external.MultipartEntity;
 
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
+import android.util.Log;
 
 public class NetworkOperation implements Runnable {
     public static final int STATUS_COMPLETED = 0;
@@ -88,6 +96,9 @@ public class NetworkOperation implements Runnable {
     private CacheHandler cacheHandler;
     private boolean fresh = false;
     private int status;
+    private List<FilePart> fileParts;
+    private List<DataPart> dataParts;
+    private byte[] body;
 
     public interface ResponseParser {
         void parse(final InputStream is, final long size) throws IOException;
@@ -113,6 +124,8 @@ public class NetworkOperation implements Runnable {
         this.params = new HashMap<String, String>();
         this.headers = new HashMap<String, String>();
         this.cacheHeaders = new HashMap<String, String>();
+        this.fileParts = new ArrayList<FilePart>();
+        this.dataParts = new ArrayList<DataPart>();
 
         status = STATUS_PENDING;
 
@@ -170,12 +183,36 @@ public class NetworkOperation implements Runnable {
             }
 
             try {
-                if (httpMethod == HttpMethod.POST) {
-                    ((HttpPost) request).setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                HttpEntity entity;
+
+                if (this.fileParts.size() > 0 || this.dataParts.size() > 0) {
+                    entity = new MultipartEntity();
+
+                    for (String param : params.keySet()) {
+                        ((MultipartEntity) entity).addPart(param, params.get(param));
+                    }
+
+                    for (FilePart filePart : fileParts) {
+                        ((MultipartEntity) entity).addPart(filePart.key, filePart.fileName, new FileInputStream(filePart.file), filePart.contentType);
+                    }
+
+                    for (DataPart dataPart : dataParts) {
+                        ((MultipartEntity) entity).addPart(dataPart.key, dataPart.fileName, new ByteArrayInputStream(dataPart.data), dataPart.contentType);
+                    }
+                } else if (this.body != null) {
+                    entity = new ByteArrayEntity(this.body);
                 } else {
-                    ((HttpPut) request).setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                    entity = new UrlEncodedFormEntity(nameValuePairs);
+                }
+
+                if (httpMethod == HttpMethod.POST) {
+                     ((HttpPost) request).setEntity(entity);
+                } else {
+                    ((HttpPut) request).setEntity(entity);
                 }
             } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -376,6 +413,40 @@ public class NetworkOperation implements Runnable {
         this.headers.putAll(headers);
     }
 
+    public void addData(final byte[] data, final String key) {
+        addData(data, key, "application/octet-stream");
+    }
+
+    public void addData(final byte[] data, final String key, final String contentType) {
+        DataPart dataPart = new DataPart();
+
+        dataPart.data = data;
+        dataPart.key = key;
+        dataPart.contentType = contentType;
+        dataPart.fileName = "filename";
+
+        this.dataParts.add(dataPart);
+    }
+
+    public void addFile(final File file, final String key) {
+        addFile(file, key, "application/octet-stream");
+    }
+
+    public void addFile(final File file, final String key, final String contentType) {
+        FilePart filePart = new FilePart();
+
+        filePart.file = file;
+        filePart.key = key;
+        filePart.contentType = contentType;
+        filePart.fileName = file.getName();
+
+        this.fileParts.add(filePart);
+    }
+
+    public void setBody(final byte[] body) {
+        this.body = body;
+    }
+
     public ResponseParser getParser() {
         return parser;
     }
@@ -562,5 +633,19 @@ public class NetworkOperation implements Runnable {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+    }
+
+    private static class DataPart {
+        public byte[] data;
+        public String key;
+        public String fileName;
+        public String contentType;
+    }
+
+    private static class FilePart {
+        public File file;
+        public String key;
+        public String fileName;
+        public String contentType;
     }
 }
