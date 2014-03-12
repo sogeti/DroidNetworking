@@ -17,6 +17,7 @@ Features
 - Automatic **gzip** response decoding support
 - Supports **Basic Authentication**
 - HTTP **response cache**
+- Multipart/form-data support
 
 Usage
 --------
@@ -24,7 +25,7 @@ See the following blog post for examples on how to use DroidNetworking: [Introdu
 
 Build
 --------
-DroidNetworking is now using Gradle. If you have Android Studio or Gradle installed on your computer you can type ./gradlew makeJar to build DroidNetworking and create a jar. The jar can be found in droid-networking/build/libs. The latest jar can also be downloaded [here](https://s3.amazonaws.com/droid-networking/droid-networking-20140227.jar)
+DroidNetworking is now using Gradle. If you have Android Studio or Gradle installed on your computer you can type ./gradlew makeJar to build DroidNetworking and create a jar. The jar can be found in droid-networking/build/libs. The latest jar can also be downloaded [here](https://s3.amazonaws.com/droid-networking/droid-networking-20140312.jar)
 
 License
 --------
