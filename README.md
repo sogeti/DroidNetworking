@@ -1,9 +1,11 @@
 DroidNetworking
 ===============
 
-Most Android apps need to use HTTP to send and receive data. There are many options for network communication in Android. Google recommends using the Apache Http Client for Eclair (2.1) and Froyo (2.2). For Gingerbread (2.3) and newer the HttpURLConnection is recommended. However response caching was not introduced in the HttpURLConnection until Ice Cream Sandwich (4.0) was released. 
+Most Android apps need to use HTTP to send and receive data. There are many options for network communication in Android. Google recommends using the Apache Http Client for Eclair (2.1) and Froyo (2.2). For Gingerbread (2.3) and newer the HttpURLConnection is recommended. However response caching was not introduced in the HttpURLConnection until Ice Cream Sandwich (4.0) was released.
 
 DroidNetworking is a network library built on top of the [Apache Http Client](http://developer.android.com/reference/org/apache/http/client/HttpClient.html). It has support for response caching, authentication, HTTP and HTTPS and many other features. Best of all, DroidNetworking can be used on Eclair (2.1) and newer. It has a simple API which reduces the amount of code needed for network communication.
+
+[![Build Status](https://sogetise.ci.cloudbees.com/buildStatus/icon?job=DroidNetworking)](https://sogetise.ci.cloudbees.com/job/DroidNetworking/)
 
 Features
 --------
@@ -16,7 +18,7 @@ Features
 - Requests use a **threadpool** to limit concurrent resource usage
 - Automatic **gzip** response decoding support
 - Supports **Basic Authentication**
-- HTTP **response cache**
+- Transparent HTTP **response cache**
 - Multipart/form-data support
 
 Usage
@@ -31,3 +33,5 @@ License
 --------
 Apache License, Version 2.0
 http://www.apache.org/licenses/LICENSE-2.0
+
+[![Built on CloudBees](http://www.cloudbees.com/sites/default/files/Button-Built-on-CB-1.png)](http://www.cloudbees.com)
