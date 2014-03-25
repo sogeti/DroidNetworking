@@ -128,7 +128,7 @@ public abstract class CacheTests {
 
         response.setBody("OK");
         response.setResponseCode(200);
-        response.addHeader("Cache-Control", "max-age=1");
+        response.addHeader("Cache-Control", "max-age=10");
         response.addHeader("Etag", "\"831363a99b0f91672533a537c2304208\"");
 
         server.enqueue(response);
@@ -154,6 +154,8 @@ public abstract class CacheTests {
         operation = NetworkEngine.getInstance().createOperationWithURLString("http://localhost");
 
         NetworkEngine.getInstance().executeOperation(operation);
+
+        assertTrue(operation.getStatus() == NetworkOperation.STATUS_COMPLETED);
 
         // Check that we get a 200 response, that is cached with the same data as before
         assertTrue(operation.getHttpStatusCode() == 200);
